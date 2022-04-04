@@ -496,7 +496,7 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     val llvmModuleSpecification: LlvmModuleSpecification by lazy {
         when {
             config.produce.isCache ->
-                CacheLlvmModuleSpecification(config.cachedLibraries, config.librariesToCache)
+                CacheLlvmModuleSpecification(config.cachedLibraries, config.libraryToCache!!)
             else -> DefaultLlvmModuleSpecification(config.cachedLibraries)
         }
     }
@@ -513,6 +513,8 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     val inlineFunctionBodies = mutableListOf<SerializedInlineFunctionReference>()
 
     val classFields = mutableListOf<SerializedClassFields>()
+
+    val calledFromExportedInlineFunctions = mutableSetOf<IrFunction>()
 
     val targetAbiInfo: TargetAbiInfo by lazy {
         when {

@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 val CompilerOutputKind.isFinalBinary: Boolean get() = when (this) {
     CompilerOutputKind.PROGRAM, CompilerOutputKind.DYNAMIC,
     CompilerOutputKind.STATIC, CompilerOutputKind.FRAMEWORK -> true
-    CompilerOutputKind.DYNAMIC_CACHE, CompilerOutputKind.STATIC_CACHE,
+    CompilerOutputKind.DYNAMIC_CACHE, CompilerOutputKind.STATIC_CACHE, CompilerOutputKind.PRELIMINARY_CACHE,
     CompilerOutputKind.LIBRARY, CompilerOutputKind.BITCODE -> false
 }
 
@@ -41,16 +41,32 @@ val CompilerOutputKind.involvesBitcodeGeneration: Boolean
 internal val Context.producedLlvmModuleContainsStdlib: Boolean
     get() = this.llvmModuleSpecification.containsModule(this.stdlibModule)
 
+internal val Context.shouldDefineFunctionClasses: Boolean
+    get() = producedLlvmModuleContainsStdlib &&
+            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
+                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/reflect/KFunction.kt") != false
+
+internal val Context.shouldDefineCachedBoxes: Boolean
+    get() = producedLlvmModuleContainsStdlib &&
+            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
+                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/native/internal/Boxing.kt") != false
+
+internal val Context.shouldLinkRuntimeNativeLibraries: Boolean
+    get() = producedLlvmModuleContainsStdlib &&
+            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
+                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/native/Runtime.kt") != false
+
 val CompilerOutputKind.involvesLinkStage: Boolean
     get() = when (this) {
         CompilerOutputKind.PROGRAM, CompilerOutputKind.DYNAMIC,
         CompilerOutputKind.DYNAMIC_CACHE, CompilerOutputKind.STATIC_CACHE,
         CompilerOutputKind.STATIC, CompilerOutputKind.FRAMEWORK -> true
-        CompilerOutputKind.LIBRARY, CompilerOutputKind.BITCODE -> false
+        CompilerOutputKind.LIBRARY, CompilerOutputKind.BITCODE, CompilerOutputKind.PRELIMINARY_CACHE -> false
     }
 
 val CompilerOutputKind.isCache: Boolean
-    get() = (this == CompilerOutputKind.STATIC_CACHE || this == CompilerOutputKind.DYNAMIC_CACHE)
+    get() = this == CompilerOutputKind.STATIC_CACHE || this == CompilerOutputKind.DYNAMIC_CACHE
+            || this == CompilerOutputKind.PRELIMINARY_CACHE
 
 internal fun llvmIrDumpCallback(state: ActionState, module: IrModuleFragment, context: Context) {
     module.let{}
@@ -113,7 +129,6 @@ private fun collectLlvmModules(context: Context, generatedBitcodeFiles: List<Str
             exceptionsSupportNativeLibrary
 
     val runtimeNativeLibraries = context.config.runtimeNativeLibraries
-            .takeIf { context.producedLlvmModuleContainsStdlib }.orEmpty()
 
 
     fun parseBitcodeFiles(files: List<String>): List<LLVMModuleRef> = files.map { bitcodeFile ->
@@ -124,7 +139,10 @@ private fun collectLlvmModules(context: Context, generatedBitcodeFiles: List<Str
         parsedModule
     }
 
-    val runtimeModules = parseBitcodeFiles(runtimeNativeLibraries + bitcodePartOfStdlib)
+    val runtimeModules = parseBitcodeFiles(
+            (runtimeNativeLibraries + bitcodePartOfStdlib)
+                    .takeIf { context.shouldLinkRuntimeNativeLibraries }.orEmpty()
+    )
     val additionalModules = parseBitcodeFiles(additionalBitcodeFiles)
     return LlvmModules(
             runtimeModules.ifNotEmpty { this + context.generateRuntimeConstantsModule() } ?: emptyList(),
@@ -174,6 +192,7 @@ internal fun linkBitcodeDependencies(context: Context) {
         embedAppleLinkerOptionsToBitcode(context.llvm, context.config)
     }
     linkAllDependencies(context, generatedBitcodeFiles)
+
 }
 
 internal fun produceOutput(context: Context) {
@@ -246,6 +265,7 @@ internal fun produceOutput(context: Context) {
             context.bitcodeFileName = output
             LLVMWriteBitcodeToFile(context.llvmModule!!, output)
         }
+        CompilerOutputKind.PRELIMINARY_CACHE -> {}
         null -> {}
     }
 }

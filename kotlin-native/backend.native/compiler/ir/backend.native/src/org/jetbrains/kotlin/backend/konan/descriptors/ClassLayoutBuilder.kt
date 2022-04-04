@@ -279,7 +279,7 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context) {
             context.getLayoutBuilder(superClass).vtableEntries
         }
 
-        val methods = irClass.overridableOrOverridingMethods
+        val methods = overridableOrOverridingMethods
         val newVtableSlots = mutableListOf<OverriddenFunctionInfo>()
         val overridenVtableSlots = mutableMapOf<IrSimpleFunction, OverriddenFunctionInfo>()
 
@@ -349,7 +349,7 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context) {
     }
 
     fun overridingOf(function: IrSimpleFunction) =
-            irClass.overridableOrOverridingMethods.firstOrNull { function in it.allOverriddenFunctions }?.let {
+            overridableOrOverridingMethods.firstOrNull { function in it.allOverriddenFunctions }?.let {
                 OverriddenFunctionInfo(it, function).getImplementation(context)
             }
 
@@ -492,8 +492,8 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context) {
         }
     }
 
-    private val IrClass.overridableOrOverridingMethods: List<IrSimpleFunction>
-        get() = this.simpleFunctions().filter { it.isOverridableOrOverrides && it.bridgeTarget == null }
+    private val overridableOrOverridingMethods: List<IrSimpleFunction>
+        get() = irClass.simpleFunctions().filter { it.isOverridableOrOverrides && it.bridgeTarget == null }
 
     private val IrFunction.uniqueName get() = computeFunctionName()
 }
