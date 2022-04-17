@@ -129,22 +129,28 @@ internal val buildAdditionalCacheInfoPhase = konanUnitPhase(
                         element.acceptChildrenVoid(this)
                     }
 
+                    private fun processFunction(function: IrFunction) {
+                        if (function.getPackageFragment() !is IrExternalPackageFragment)
+                            calledFromExportedInlineFunctions.add(function)
+                    }
+
                     override fun visitCall(expression: IrCall) {
                         expression.acceptChildrenVoid(this)
 
-                        val callee = expression.symbol.owner
-                        if (callee.getPackageFragment() is IrExternalPackageFragment) return
-
-                        calledFromExportedInlineFunctions.add(callee)
+                        processFunction(expression.symbol.owner)
                     }
 
                     override fun visitFunctionReference(expression: IrFunctionReference) {
                         expression.acceptChildrenVoid(this)
 
-                        val callee = expression.symbol.owner
-                        if (callee.getPackageFragment() is IrExternalPackageFragment) return
+                        processFunction(expression.symbol.owner)
+                    }
 
-                        calledFromExportedInlineFunctions.add(callee)
+                    override fun visitPropertyReference(expression: IrPropertyReference) {
+                        expression.acceptChildrenVoid(this)
+
+                        expression.getter?.owner?.let { processFunction(it) }
+                        expression.setter?.owner?.let { processFunction(it) }
                     }
                 })
             }
