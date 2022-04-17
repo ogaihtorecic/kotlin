@@ -726,6 +726,9 @@ internal class KonanIrLinker(
                     referenceIrSymbol(symbolDeserializer, sigIndex, parameter.symbol)
                 }
             }
+            require(endToEndTypeParameterIndex == serializedClassFields.typeParameterSigs.size) {
+                "Not all type parameters have been referenced"
+            }
 
             fun getByClassId(classId: ClassId): IrClassSymbol {
                 val classIdSig = getPublicSignature(classId.packageFqName, classId.relativeClassName.asString())
