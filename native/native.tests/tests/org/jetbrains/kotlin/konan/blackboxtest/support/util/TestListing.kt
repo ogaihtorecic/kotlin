@@ -49,6 +49,7 @@ internal object DumpedTestListing {
                 }
             }
         }
+            .sorted()
     }
 }
 

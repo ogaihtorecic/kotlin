@@ -126,6 +126,8 @@ data class File constructor(internal val javaPath: Path) {
         javaPath.toFile().deleteOnExit()
         return this // Allow streaming.
     }
+    fun createNew() = javaPath.toFile().createNewFile()
+
     fun readBytes() = Files.readAllBytes(javaPath)
     fun writeBytes(bytes: ByteArray) = Files.write(javaPath, bytes)
     fun appendBytes(bytes: ByteArray)
@@ -136,6 +138,12 @@ data class File constructor(internal val javaPath: Path) {
     }
 
     fun writeText(text: String): Unit = writeLines(listOf(text))
+
+    fun appendLines(lines: Iterable<String>) {
+        Files.write(javaPath, lines, StandardOpenOption.APPEND)
+    }
+
+    fun appendText(text: String): Unit = appendLines(listOf(text))
 
     fun forEachLine(action: (String) -> Unit) {
         Files.lines(javaPath).use { lines ->
