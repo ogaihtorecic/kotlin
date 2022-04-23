@@ -207,7 +207,6 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
             konanKlibDir = File(distribution.klib)
     )
 
-
     val fullExportedNamePrefix: String
         get() = configuration.get(KonanConfigKeys.FULL_EXPORTED_NAME_PREFIX) ?: implicitModuleName
 
@@ -381,6 +380,9 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
 
     internal val librariesToCache: Set<KotlinLibrary>
         get() = cacheSupport.librariesToCache
+
+    internal val libraryToCache: PartialCacheInfo?
+        get() = cacheSupport.libraryToCache
 
     val outputFiles =
             OutputFiles(configuration.get(KonanConfigKeys.OUTPUT) ?: cacheSupport.tryGetImplicitOutput(),
