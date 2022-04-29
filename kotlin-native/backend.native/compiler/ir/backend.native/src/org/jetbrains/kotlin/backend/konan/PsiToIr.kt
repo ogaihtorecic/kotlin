@@ -226,6 +226,11 @@ internal fun Context.psiToIr(
 
     // Note: coupled with [shouldLower] below.
     irModules = modules.filterValues { llvmModuleSpecification.containsModule(it) }
+    // IR linker deserializes files in the order they lie on the disk, which might be inconvenient,
+    // so to make the pipeline more deterministic, the files are to be sorted.
+    // This concerns in the first place global initializers order for the eager initialization strategy,
+    // where the files are being initialized in order one by one.
+    irModules.values.forEach { module -> module.files.sortBy { it.fileEntry.name } }
 
     if (!isProducingLibrary)
         irLinker = irDeserializer as KonanIrLinker

@@ -5,7 +5,10 @@
 
 package org.jetbrains.kotlin.backend.konan
 
+import org.jetbrains.kotlin.backend.common.serialization.IrKlibBytesSource
+import org.jetbrains.kotlin.backend.common.serialization.IrLibraryFileFromBytes
 import org.jetbrains.kotlin.backend.common.serialization.codedInputStream
+import org.jetbrains.kotlin.backend.common.serialization.deserializeFqName
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.konan.file.File
@@ -66,22 +69,14 @@ class CacheSupport(
         if (fileToCache == null)
             return baseLibraryCacheDirectory.absolutePath
 
-        // TODO: probably should do this in the same way as is done in per-file klibs (fqName_pathHash).
         val fileProtos = Array<ProtoFile>(libraryToCache.klib.fileCount()) {
             ProtoFile.parseFrom(libraryToCache.klib.file(it).codedInputStream, ExtensionRegistryLite.newInstance())
         }
-        val commonPrefix = fileProtos
-                .drop(1)
-                .fold(fileProtos[0].fileEntry.name) { s, f -> s.commonPrefixWith(f.fileEntry.name) }
-        val pathSeparatorIndex = commonPrefix.lastIndexOf(File.separatorChar)
-        require(pathSeparatorIndex >= 0) { "The library's content root should be a directory: $commonPrefix" }
-        val libraryContentRoot = commonPrefix.substring(0, pathSeparatorIndex + 1)
-        require(fileToCache.startsWith(libraryContentRoot)) {
-            "File $fileToCache should lie in the library's content root $libraryContentRoot"
-        }
-
-        val relativePathToFileToCache = fileToCache.substring(libraryContentRoot.length).replace(File.separatorChar, '_')
-        val fileCacheDirectory = baseLibraryCacheDirectory.child(relativePathToFileToCache)
+        val fileIndex = fileProtos.indexOfFirst { it.fileEntry.name == fileToCache }
+        require(fileIndex >= 0) { "No file found in klib with path $fileToCache" }
+        val fileReader = IrLibraryFileFromBytes(IrKlibBytesSource(libraryToCache.klib, fileIndex))
+        val fqName = fileReader.deserializeFqName(fileProtos[fileIndex].fqNameList)
+        val fileCacheDirectory = baseLibraryCacheDirectory.child(cacheFileId(fqName, fileToCache))
         val contentDirName = if (produce == CompilerOutputKind.PRELIMINARY_CACHE)
             CachedLibraries.PER_FILE_CACHE_IR_LEVEL_DIR_NAME
         else CachedLibraries.PER_FILE_CACHE_BINARY_LEVEL_DIR_NAME
@@ -144,6 +139,10 @@ class CacheSupport(
 
     internal val preLinkCaches: Boolean =
             configuration.get(KonanConfigKeys.PRE_LINK_CACHES, false)
+
+    companion object {
+        fun cacheFileId(fqName: String, filePath: String) = "${if (fqName == "") "ROOT" else fqName}.${filePath.hashCode().toString(Character.MAX_RADIX)}"
+    }
 
     init {
         // Ensure dependencies of every cached library are cached too:

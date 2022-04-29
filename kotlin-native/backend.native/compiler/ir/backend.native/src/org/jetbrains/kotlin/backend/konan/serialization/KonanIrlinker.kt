@@ -341,6 +341,7 @@ internal class KonanIrLinker(
         FakeOverrideBuilder(this, symbolTable, KonanManglerIr, IrTypeSystemContextImpl(builtIns), friendModules, KonanFakeOverrideClassFilter)
 
     val moduleDeserializers = mutableMapOf<ModuleDescriptor, KonanPartialModuleDeserializer>()
+    val klibToModuleDeserializerMap = mutableMapOf<KotlinLibrary, KonanPartialModuleDeserializer>()
 
     override fun createModuleDeserializer(moduleDescriptor: ModuleDescriptor, klib: KotlinLibrary?, strategyResolver: (String) -> DeserializationStrategy) =
             when {
@@ -361,6 +362,7 @@ internal class KonanIrLinker(
                     }
                     KonanPartialModuleDeserializer(moduleDescriptor, klib, strategyResolver, deserializationStrategy).also {
                         moduleDeserializers[moduleDescriptor] = it
+                        klibToModuleDeserializerMap[klib] = it
                     }
                 }
             }
@@ -410,7 +412,8 @@ internal class KonanIrLinker(
                 if (cacheDeserializationStrategy.contains(fileName))
                     strategyResolver(fileName)
                 else DeserializationStrategy.ON_DEMAND
-            }, klib.versions.abiVersion ?: KotlinAbiVersion.CURRENT, containsErrorCode) {
+            }, klib.versions.abiVersion ?: KotlinAbiVersion.CURRENT, containsErrorCode
+    ) {
         override val moduleFragment: IrModuleFragment = KonanIrModuleFragmentImpl(moduleDescriptor, builtIns)
 
         fun buildInlineFunctionReference(irFunction: IrFunction): SerializedInlineFunctionReference {
@@ -762,6 +765,12 @@ internal class KonanIrLinker(
                             name, type, isConst = (field.flags and SerializedClassFieldInfo.FLAG_IS_CONST) != 0, irField = null)
                 }
             }
+        }
+
+        val sortedFileIds by lazy {
+            fileDeserializationStates
+                    .sortedBy { it.file.fileEntry.name }
+                    .map { CacheSupport.cacheFileId(it.file.fqName.asString(), it.file.fileEntry.name) }
         }
     }
 

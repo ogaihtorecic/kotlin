@@ -2857,7 +2857,11 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
                 when (cache.granularity) {
                     CachedLibraries.Granularity.MODULE -> listOf(addCtorFunction(ctorName))
-                    CachedLibraries.Granularity.FILE -> cache.fileDirs.map { addCtorFunction(fileCtorName(library.uniqueName, it.name)) }
+                    CachedLibraries.Granularity.FILE -> {
+                        context.irLinker.klibToModuleDeserializerMap[library]!!.sortedFileIds.map {
+                            addCtorFunction(fileCtorName(library.uniqueName, it))
+                        }
+                    }
                 }
             }
         }
