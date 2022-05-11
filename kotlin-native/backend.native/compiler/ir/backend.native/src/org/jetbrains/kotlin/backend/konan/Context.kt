@@ -496,7 +496,7 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     val llvmModuleSpecification: LlvmModuleSpecification by lazy {
         when {
             config.produce.isCache ->
-                CacheLlvmModuleSpecification(config.cachedLibraries, config.libraryToCache!!)
+                CacheLlvmModuleSpecification(config.cachedLibraries, config.librariesToCache)
             else -> DefaultLlvmModuleSpecification(config.cachedLibraries)
         }
     }

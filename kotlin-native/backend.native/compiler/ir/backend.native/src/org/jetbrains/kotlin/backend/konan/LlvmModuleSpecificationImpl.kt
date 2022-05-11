@@ -29,6 +29,7 @@ internal abstract class LlvmModuleSpecificationBase(protected val cachedLibrarie
 
     override fun containsDeclaration(declaration: IrDeclaration): Boolean =
             declaration.konanLibrary.let { it == null || containsLibrary(it) }
+                    && declaration.getPackageFragment() !is IrExternalPackageFragment
 }
 
 internal class DefaultLlvmModuleSpecification(cachedLibraries: CachedLibraries)
@@ -40,12 +41,9 @@ internal class DefaultLlvmModuleSpecification(cachedLibraries: CachedLibraries)
 
 internal class CacheLlvmModuleSpecification(
         cachedLibraries: CachedLibraries,
-        private val libraryToCache: PartialCacheInfo
+        private val librariesToCache: Set<KotlinLibrary>
 ) : LlvmModuleSpecificationBase(cachedLibraries) {
     override val isFinal = false
 
-    override fun containsLibrary(library: KotlinLibrary): Boolean = library == libraryToCache.klib
-
-    override fun containsDeclaration(declaration: IrDeclaration): Boolean =
-            declaration.konanLibrary.let { it == null || containsLibrary(it) && declaration.getPackageFragment() !is IrExternalPackageFragment }
+    override fun containsLibrary(library: KotlinLibrary): Boolean = library in librariesToCache
 }

@@ -114,6 +114,7 @@ class CacheSupport(
                     "not found among resolved libraries:\n  " +
                     allLibraries.joinToString("\n  ") { it.libraryFile.absolutePath })
 
+    // TODO: Is multi-library cache being used actually?
     internal val librariesToCache: Set<KotlinLibrary> = run {
         val libraryToAddToCachePath = configuration.get(KonanConfigKeys.LIBRARY_TO_ADD_TO_CACHE)
         if (libraryToAddToCachePath.isNullOrEmpty()) {
