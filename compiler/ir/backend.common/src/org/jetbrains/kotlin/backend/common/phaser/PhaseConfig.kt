@@ -13,18 +13,18 @@ fun CompilerPhase<*, *, *>.toPhaseMap(): MutableMap<String, AnyNamedPhase> =
     }
 
 class PhaseConfigBuilder(private val compoundPhase: CompilerPhase<*, *, *>) {
-    val enabled: MutableSet<AnyNamedPhase> = mutableSetOf()
-    val verbose: MutableSet<AnyNamedPhase> = mutableSetOf()
-    val toDumpStateBefore: MutableSet<AnyNamedPhase> = mutableSetOf()
-    val toDumpStateAfter: MutableSet<AnyNamedPhase> = mutableSetOf()
+    val enabled = mutableSetOf<AnyNamedPhase>()
+    val verbose = mutableSetOf<AnyNamedPhase>()
+    val toDumpStateBefore = mutableSetOf<AnyNamedPhase>()
+    val toDumpStateAfter = mutableSetOf<AnyNamedPhase>()
     var dumpToDirectory: String? = null
     var dumpOnlyFqName: String? = null
-    val toValidateStateBefore: MutableSet<AnyNamedPhase> = mutableSetOf()
-    val toValidateStateAfter: MutableSet<AnyNamedPhase> = mutableSetOf()
-    val namesOfElementsExcludedFromDumping: MutableSet<String> = mutableSetOf()
-    var needProfiling: Boolean = false
-    var checkConditions: Boolean = false
-    var checkStickyConditions: Boolean = false
+    val toValidateStateBefore = mutableSetOf<AnyNamedPhase>()
+    val toValidateStateAfter = mutableSetOf<AnyNamedPhase>()
+    val namesOfElementsExcludedFromDumping = mutableSetOf<String>()
+    var needProfiling = false
+    var checkConditions = false
+    var checkStickyConditions = false
 
     fun build() = PhaseConfig(
         compoundPhase, compoundPhase.toPhaseMap(), enabled,
