@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.backend.common.serialization.CompatibilityMode
 import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataMonolithicSerializer
 import org.jetbrains.kotlin.backend.konan.descriptors.isFromInteropLibrary
 import org.jetbrains.kotlin.backend.konan.llvm.*
+import org.jetbrains.kotlin.backend.konan.lower.CacheInfoBuilder
 import org.jetbrains.kotlin.backend.konan.lower.ExpectToActualDefaultValueCopier
 import org.jetbrains.kotlin.backend.konan.lower.SamSuperTypesChecker
 import org.jetbrains.kotlin.backend.konan.objcexport.ObjCExport
@@ -123,72 +124,12 @@ internal val psiToIrPhase = konanUnitPhase(
 
 internal val buildAdditionalCacheInfoPhase = konanUnitPhase(
         op = {
-            fun process(irFunction: IrFunction) {
-                irFunction.acceptVoid(object : IrElementVisitorVoid {
-                    override fun visitElement(element: IrElement) {
-                        element.acceptChildrenVoid(this)
-                    }
-
-                    private fun processFunction(function: IrFunction) {
-                        if (function.getPackageFragment() !is IrExternalPackageFragment)
-                            calledFromExportedInlineFunctions.add(function)
-                    }
-
-                    override fun visitCall(expression: IrCall) {
-                        expression.acceptChildrenVoid(this)
-
-                        processFunction(expression.symbol.owner)
-                    }
-
-                    override fun visitFunctionReference(expression: IrFunctionReference) {
-                        expression.acceptChildrenVoid(this)
-
-                        processFunction(expression.symbol.owner)
-                    }
-
-                    override fun visitPropertyReference(expression: IrPropertyReference) {
-                        expression.acceptChildrenVoid(this)
-
-                        expression.getter?.owner?.let { processFunction(it) }
-                        expression.setter?.owner?.let { processFunction(it) }
-                    }
-                })
-            }
-
             irModules.values.single().let { module ->
                 val moduleDeserializer = irLinker.moduleDeserializers[module.descriptor]
                 if (moduleDeserializer == null) {
                     require(module.descriptor.isFromInteropLibrary()) { "No module deserializer for ${module.descriptor}" }
                 } else {
-                    val compatibleMode = CompatibilityMode(moduleDeserializer.libraryAbiVersion).oldSignatures
-                    module.acceptChildrenVoid(object : IrElementVisitorVoid {
-                        override fun visitElement(element: IrElement) {
-                            element.acceptChildrenVoid(this)
-                        }
-
-                        override fun visitClass(declaration: IrClass) {
-                            declaration.acceptChildrenVoid(this)
-
-                            if (!declaration.isInterface && declaration.visibility != DescriptorVisibilities.LOCAL
-                                    && declaration.isExported && declaration.origin != DECLARATION_ORIGIN_FUNCTION_CLASS)
-                                classFields.add(moduleDeserializer.buildClassFields(declaration, getLayoutBuilder(declaration).getDeclaredFields()))
-                        }
-
-                        override fun visitFunction(declaration: IrFunction) {
-                            declaration.acceptChildrenVoid(this)
-
-                            if (declaration.isFakeOverride || !declaration.isExportedInlineFunction) return
-                            inlineFunctionBodies.add(moduleDeserializer.buildInlineFunctionReference(declaration))
-
-                            process(declaration)
-                        }
-
-                        private val IrClass.isExported
-                            get() = with(KonanManglerIr) { isExported(compatibleMode) }
-
-                        private val IrFunction.isExportedInlineFunction
-                            get() = isInline && with(KonanManglerIr) { isExported(compatibleMode) }
-                    })
+                    CacheInfoBuilder(this, moduleDeserializer).build()
                 }
             }
         },
