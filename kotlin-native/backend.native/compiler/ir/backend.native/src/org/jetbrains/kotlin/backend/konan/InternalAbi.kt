@@ -48,7 +48,7 @@ internal class InternalAbi(private val context: Context) {
     }
 
     private fun createAbiFile(module: IrModuleFragment): IrFile =
-            module.addFile(NaiveSourceBasedFileEntryImpl("internal"), ABI_FQ_NAME)
+            module.addFile(NaiveSourceBasedFileEntryImpl("internal"), KonanFqNames.cachesInternalAbi)
 
     private fun createExternalAbiFile(module: ModuleDescriptor, fqName: FqName): IrExternalPackageFragment {
         val packageFragmentDescriptor = object : PackageFragmentDescriptorImpl(module, fqName) {
@@ -63,7 +63,7 @@ internal class InternalAbi(private val context: Context) {
     fun reference(function: IrFunction, module: ModuleDescriptor) {
         assert(function.isExternal) { "Function that represents external ABI should be marked as external" }
         context.llvmImports.add(module.llvmSymbolOrigin)
-        val externalAbiFile = externalAbiFiles.getOrPut(module) { createExternalAbiFile(module, ABI_FQ_NAME) }
+        val externalAbiFile = externalAbiFiles.getOrPut(module) { createExternalAbiFile(module, KonanFqNames.cachesInternalAbi) }
         externalAbiFile.addChild(function)
     }
 
@@ -75,8 +75,6 @@ internal class InternalAbi(private val context: Context) {
     }
 
     companion object {
-        val ABI_FQ_NAME = FqName("kotlin.native.caches.abi")
-
         /**
          * Allows to distinguish external declarations to internal ABI.
          */
