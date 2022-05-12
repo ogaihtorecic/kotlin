@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.backend.konan.serialization.AbstractKonanIrMangler
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.util.findAnnotation
 import org.jetbrains.kotlin.ir.util.fqNameForIrSerialization
-import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.konan.library.KonanLibrary
 import org.jetbrains.kotlin.library.uniqueName
@@ -37,22 +36,26 @@ object KonanBinaryInterface {
 
     val IrFunction.functionName: String get() = mangler.run { signatureString(compatibleMode = true) }
 
-    val IrFunction.symbolName: String get() = funSymbolNameImpl()
-    val IrField.symbolName: String get() =
-        withPrefix(MangleConstant.FIELD_PREFIX, fieldSymbolNameImpl())
-    val IrClass.typeInfoSymbolName: String get() =
-        withPrefix(MangleConstant.CLASS_PREFIX, typeInfoSymbolNameImpl())
+    val IrFunction.symbolName: String
+        get() {
+            require(isExported(this)) { "Asked for symbol name for a private function ${render()}" }
+
+            return funSymbolNameImpl(null)
+        }
+
+    val IrField.symbolName: String get() = withPrefix(MangleConstant.FIELD_PREFIX, fieldSymbolNameImpl())
+
+    val IrClass.typeInfoSymbolName: String get() = withPrefix(MangleConstant.CLASS_PREFIX, typeInfoSymbolNameImpl())
+
+    fun IrFunction.privateSymbolName(containerName: String): String = funSymbolNameImpl(containerName)
+
     fun isExported(declaration: IrDeclaration) = exportChecker.run {
         check(declaration, SpecialDeclarationType.REGULAR) || declaration.isPlatformSpecificExported()
     }
 
     private fun withPrefix(prefix: String, mangle: String) = "$prefix:$mangle"
 
-    private fun IrFunction.funSymbolNameImpl(): String {
-        if (!isExported(this)) {
-            throw AssertionError(render())
-        }
-
+    private fun IrFunction.funSymbolNameImpl(containerName: String?): String {
         if (isExternal) {
             this.externalSymbolOrThrow()?.let {
                 return it
@@ -64,7 +67,8 @@ object KonanBinaryInterface {
             return name // no wrapping currently required
         }
 
-        return withPrefix(MangleConstant.FUN_PREFIX, mangler.run { mangleString(compatibleMode = true) })
+        val mangle = mangler.run { mangleString(compatibleMode = true) }
+        return withPrefix(MangleConstant.FUN_PREFIX, containerName?.plus(".$mangle") ?: mangle)
     }
 
     private fun IrField.fieldSymbolNameImpl(): String {
@@ -116,6 +120,8 @@ fun IrFunction.computeFunctionName() = with(KonanBinaryInterface) { functionName
 fun IrFunction.computeFullName() = parent.fqNameForIrSerialization.child(Name.identifier(computeFunctionName())).asString()
 
 fun IrFunction.computeSymbolName() = with(KonanBinaryInterface) { symbolName }.replaceSpecialSymbols()
+
+fun IrFunction.computePrivateSymbolName(containerName: String) = with(KonanBinaryInterface) { privateSymbolName(containerName) }.replaceSpecialSymbols()
 
 fun IrField.computeSymbolName() = with(KonanBinaryInterface) { symbolName }.replaceSpecialSymbols()
 

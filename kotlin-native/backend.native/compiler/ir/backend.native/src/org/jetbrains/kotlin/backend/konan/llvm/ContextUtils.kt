@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.backend.konan.llvm
 
 import kotlinx.cinterop.toKString
 import llvm.*
+import org.jetbrains.kotlin.backend.common.serialization.mangle.MangleConstant
 import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.library.resolver.TopologicalLibraryOrder
@@ -196,9 +197,9 @@ internal interface ContextUtils : RuntimeAware {
                         val moduleDeserializer = context.irLinker.moduleDeserializers[moduleDescriptor]
                                 ?: error("No module deserializer for $moduleDescriptor")
                         val idSig = moduleDeserializer.descriptorSignatures[descriptor] ?: error("No signature for $descriptor")
-                        val containerName = this.parentClassOrNull?.fqNameForIrSerialization
+                        val containerName = this.parentClassOrNull?.fqNameForIrSerialization?.asString()
                                 ?: (idSig.topLevelSignature().fileSignature() ?: error("No file for $idSig")).fileName
-                        "kfun:$containerName.$functionName"
+                        this.computePrivateSymbolName(containerName)
                     }
                     val proto = LlvmFunctionProto(this, symbolName, this@ContextUtils)
                     context.llvm.externalFunction(proto)

@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.backend.konan.llvm
 
 import kotlinx.cinterop.toCValues
 import llvm.*
+import org.jetbrains.kotlin.backend.common.serialization.mangle.MangleConstant
 import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.descriptors.ClassLayoutBuilder
 import org.jetbrains.kotlin.backend.konan.descriptors.isTypedIntrinsic
@@ -369,12 +370,13 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
                     }
                 }
             } else {
-                "kfun:" +
-                        ((context.config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
-                                ?.filePath?.let {
-                                    "${declaration.parentClassOrNull?.fqNameForIrSerialization ?: it}.${declaration.functionName}"
-                                }
-                                ?: qualifyInternalName(declaration))
+                if (!context.config.producePerFileCache)
+                    "${MangleConstant.FUN_PREFIX}:${qualifyInternalName(declaration)}"
+                else {
+                    val containerName = declaration.parentClassOrNull?.fqNameForIrSerialization?.asString()
+                            ?: (context.config.libraryToCache!!.strategy as CacheDeserializationStrategy.SingleFile).filePath
+                    declaration.computePrivateSymbolName(containerName)
+                }
             }
 
             val proto = LlvmFunctionProto(declaration, symbolName, this)
