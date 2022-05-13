@@ -64,3 +64,14 @@ public annotation class ExperimentalJsExport
 @SinceKotlin("1.4")
 @OptionalExpectation
 public expect annotation class JsExport()
+
+/**
+ * This annotation should be used only on exported fields (On fields which parent is exported)
+ * it adds ability to generate not only nullable field but also optional inside TypeScript declarations
+ */
+@ExperimentalJsExport
+@Retention(AnnotationRetention.BINARY)
+@Target(PROPERTY)
+@SinceKotlin("1.7")
+@OptionalExpectation
+public expect annotation class JsOptional()

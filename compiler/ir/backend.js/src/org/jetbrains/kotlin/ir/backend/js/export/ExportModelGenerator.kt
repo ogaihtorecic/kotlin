@@ -142,7 +142,8 @@ class ExportModelGenerator(
             isProtected = property.visibility == DescriptorVisibilities.PROTECTED,
             isField = parentClass?.isInterface == true,
             irGetter = property.getter,
-            irSetter = property.setter
+            irSetter = property.setter,
+            isOptional = property.isJsOptional()
         )
     }
 

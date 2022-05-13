@@ -1231,6 +1231,22 @@ public class DiagnosticsTestWithJsStdLibGenerated extends AbstractDiagnosticsTes
     }
 
     @Nested
+    @TestMetadata("compiler/testData/diagnostics/testsWithJsStdLib/optional")
+    @TestDataPath("$PROJECT_ROOT")
+    public class Optional {
+        @Test
+        public void testAllFilesPresentInOptional() throws Exception {
+            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/testsWithJsStdLib/optional"), Pattern.compile("^(.+)\\.kt$"), null, true);
+        }
+
+        @Test
+        @TestMetadata("jsOptionalChecks.kt")
+        public void testJsOptionalChecks() throws Exception {
+            runTest("compiler/testData/diagnostics/testsWithJsStdLib/optional/jsOptionalChecks.kt");
+        }
+    }
+
+    @Nested
     @TestMetadata("compiler/testData/diagnostics/testsWithJsStdLib/qualifier")
     @TestDataPath("$PROJECT_ROOT")
     public class Qualifier {

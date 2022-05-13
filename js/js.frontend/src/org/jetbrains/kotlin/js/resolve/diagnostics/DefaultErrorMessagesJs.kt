@@ -108,6 +108,9 @@ private val DIAGNOSTIC_FACTORY_TO_RENDERER by lazy {
 
         put(ErrorsJs.NON_CONSUMABLE_EXPORTED_IDENTIFIER, "Exported declaration contains non-consumable identifier '${0}', that can't be represented inside TS definitions and ESM", STRING)
 
+        put(ErrorsJs.NOT_EXPORTED_OPTIONAL, "Optional parameter should be exported or nothing will happen")
+        put(ErrorsJs.NON_NULLABLE_OPTIONAL, "Optional parameter should be nullable, because user will have ability to set null as an value for an optional parameter")
+
         this
     }
 }

@@ -41,6 +41,8 @@ import static org.jetbrains.kotlin.resolve.descriptorUtil.DescriptorUtilsKt.isEf
 public final class AnnotationsUtils {
     public static final FqName JS_NAME = new FqName("kotlin.js.JsName");
     private static final FqName JS_EXPORT = new FqName("kotlin.js.JsExport");
+
+    private static final FqName JS_OPTIONAL = new FqName("kotlin.js.JsOptional");
     public static final FqName JS_MODULE_ANNOTATION = new FqName("kotlin.js.JsModule");
     private static final FqName JS_NON_MODULE_ANNOTATION = new FqName("kotlin.js.JsNonModule");
     public static final FqName JS_QUALIFIER_ANNOTATION = new FqName("kotlin.js.JsQualifier");
@@ -178,6 +180,11 @@ public final class AnnotationsUtils {
     @Nullable
     public static AnnotationDescriptor getJsExportAnnotation(@NotNull DeclarationDescriptor descriptor) {
         return descriptor.getAnnotations().findAnnotation(JS_EXPORT);
+    }
+
+    @Nullable
+    public static AnnotationDescriptor getJsOptionalAnnotation(@NotNull DeclarationDescriptor descriptor) {
+        return descriptor.getAnnotations().findAnnotation(JS_OPTIONAL);
     }
 
     public static boolean isPredefinedObject(@NotNull DeclarationDescriptor descriptor) {

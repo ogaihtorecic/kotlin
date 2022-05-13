@@ -23,6 +23,7 @@ object JsAnnotations {
     val jsNameFqn = FqName("kotlin.js.JsName")
     val jsQualifierFqn = FqName("kotlin.js.JsQualifier")
     val jsExportFqn = FqName("kotlin.js.JsExport")
+    val jsOptionalFqn = FqName("kotlin.js.JsOptional")
     val jsNativeGetter = FqName("kotlin.js.nativeGetter")
     val jsNativeSetter = FqName("kotlin.js.nativeSetter")
     val jsNativeInvoke = FqName("kotlin.js.nativeInvoke")
@@ -57,6 +58,9 @@ fun IrAnnotationContainer.getJsFunAnnotation(): String? =
 
 fun IrAnnotationContainer.isJsExport(): Boolean =
     hasAnnotation(JsAnnotations.jsExportFqn)
+
+fun IrAnnotationContainer.isJsOptional(): Boolean =
+    hasAnnotation(JsAnnotations.jsOptionalFqn)
 
 fun IrAnnotationContainer.isJsNativeGetter(): Boolean = hasAnnotation(JsAnnotations.jsNativeGetter)
 

@@ -201,3 +201,12 @@ public actual annotation class JsExport
 @SinceKotlin("1.6")
 @Deprecated("This annotation is a temporal migration assistance and may be removed in the future releases, please consider filing an issue about the case where it is needed")
 public annotation class EagerInitialization
+/**
+ * This annotation should be used only on exported fields (On fields which parent is exported)
+ * it adds ability to generate not only nullable field but also optional inside TypeScript declarations
+ */
+@ExperimentalJsExport
+@Retention(AnnotationRetention.BINARY)
+@Target(PROPERTY)
+@SinceKotlin("1.7")
+public actual annotation class JsOptional()
