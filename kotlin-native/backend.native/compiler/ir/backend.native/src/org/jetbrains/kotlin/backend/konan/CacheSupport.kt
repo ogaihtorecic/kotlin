@@ -16,22 +16,31 @@ import org.jetbrains.kotlin.konan.target.CompilerOutputKind
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.resolver.KotlinLibraryResolveResult
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.protobuf.ExtensionRegistryLite
 import org.jetbrains.kotlin.backend.common.serialization.proto.IrFile as ProtoFile
 
 sealed class CacheDeserializationStrategy {
     abstract fun contains(filePath: String): Boolean
+    abstract fun contains(fqName: FqName, fileName: String): Boolean
 
     object Nothing : CacheDeserializationStrategy() {
         override fun contains(filePath: String) = false
+        override fun contains(fqName: FqName, fileName: String) = false
     }
 
     object WholeModule : CacheDeserializationStrategy() {
         override fun contains(filePath: String) = true
+        override fun contains(fqName: FqName, fileName: String) = true
     }
 
     class SingleFile(val filePath: String) : CacheDeserializationStrategy() {
         override fun contains(filePath: String) = filePath == this.filePath
+
+        lateinit var fqName: String
+
+        override fun contains(fqName: FqName, fileName: String) =
+                fqName.asString() == this.fqName && File(filePath).name == fileName
     }
 }
 
@@ -59,16 +68,17 @@ class CacheSupport(
         val libraryToCache = libraryToCache ?: return null
         // Put the resulting library in the first cache directory.
         val cacheDirectory = implicitCacheDirectories.firstOrNull() ?: return null
-        val fileToCache = (libraryToCache.strategy as? CacheDeserializationStrategy.SingleFile)?.filePath
+        val singleFileStrategy = libraryToCache.strategy as? CacheDeserializationStrategy.SingleFile
         val baseLibraryCacheDirectory = cacheDirectory.child(
-                if (fileToCache == null)
+                if (singleFileStrategy == null)
                     CachedLibraries.getCachedLibraryName(libraryToCache.klib)
                 else
                     CachedLibraries.getPerFileCachedLibraryName(libraryToCache.klib)
         )
-        if (fileToCache == null)
+        if (singleFileStrategy == null)
             return baseLibraryCacheDirectory.absolutePath
 
+        val fileToCache = singleFileStrategy.filePath
         val fileProtos = Array<ProtoFile>(libraryToCache.klib.fileCount()) {
             ProtoFile.parseFrom(libraryToCache.klib.file(it).codedInputStream, ExtensionRegistryLite.newInstance())
         }
@@ -76,6 +86,7 @@ class CacheSupport(
         require(fileIndex >= 0) { "No file found in klib with path $fileToCache" }
         val fileReader = IrLibraryFileFromBytes(IrKlibBytesSource(libraryToCache.klib, fileIndex))
         val fqName = fileReader.deserializeFqName(fileProtos[fileIndex].fqNameList)
+        singleFileStrategy.fqName = fqName
         val fileCacheDirectory = baseLibraryCacheDirectory.child(cacheFileId(fqName, fileToCache))
         val contentDirName = if (produce == CompilerOutputKind.PRELIMINARY_CACHE)
             CachedLibraries.PER_FILE_CACHE_IR_LEVEL_DIR_NAME

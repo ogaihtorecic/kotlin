@@ -43,18 +43,15 @@ internal val Context.producedLlvmModuleContainsStdlib: Boolean
 
 internal val Context.shouldDefineFunctionClasses: Boolean
     get() = producedLlvmModuleContainsStdlib &&
-            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
-                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/reflect/KFunction.kt") != false
+            config.libraryToCache?.strategy?.contains(KonanFqNames.internalPackageName, "KFunctionImpl.kt") != false
 
 internal val Context.shouldDefineCachedBoxes: Boolean
     get() = producedLlvmModuleContainsStdlib &&
-            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
-                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/native/internal/Boxing.kt") != false
+            config.libraryToCache?.strategy?.contains(KonanFqNames.internalPackageName, "Boxing.kt") != false
 
 internal val Context.shouldLinkRuntimeNativeLibraries: Boolean
     get() = producedLlvmModuleContainsStdlib &&
-            (config.libraryToCache?.strategy as? CacheDeserializationStrategy.SingleFile)
-                    ?.filePath?.endsWith("runtime/src/main/kotlin/kotlin/native/Runtime.kt") != false
+            config.libraryToCache?.strategy?.contains(KonanFqNames.packageName, "Runtime.kt") != false
 
 val CompilerOutputKind.involvesLinkStage: Boolean
     get() = when (this) {
