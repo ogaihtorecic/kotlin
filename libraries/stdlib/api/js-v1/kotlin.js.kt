@@ -264,6 +264,14 @@ public final annotation class JsNonModule : kotlin.Annotation {
     public constructor JsNonModule()
 }
 
+@kotlin.js.ExperimentalJsExport
+@kotlin.annotation.Retention(value = AnnotationRetention.BINARY)
+@kotlin.annotation.Target(allowedTargets = {AnnotationTarget.PROPERTY})
+@kotlin.SinceKotlin(version = "1.7")
+public final annotation class JsOptional : kotlin.Annotation {
+    public constructor JsOptional()
+}
+
 @kotlin.annotation.Retention(value = AnnotationRetention.BINARY)
 @kotlin.annotation.Target(allowedTargets = {AnnotationTarget.FILE})
 public final annotation class JsQualifier : kotlin.Annotation {
