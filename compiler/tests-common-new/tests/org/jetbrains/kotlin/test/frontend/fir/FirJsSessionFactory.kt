@@ -42,41 +42,12 @@ object FirJsSessionFactory {
         sessionProvider: FirProjectSessionProvider,
         moduleDataProvider: ModuleDataProvider,
         languageVersionSettings: LanguageVersionSettings = LanguageVersionSettingsImpl.DEFAULT,
-    ): FirSession {
-        return FirCliSession(sessionProvider, FirSession.Kind.Library).apply session@{
-            moduleDataProvider.allModuleData.forEach {
-                sessionProvider.registerSession(it, this)
-                it.bindSession(this)
-            }
-
-            registerCliCompilerOnlyComponents()
-            registerCommonComponents(languageVersionSettings)
-
-            val kotlinScopeProvider = FirKotlinScopeProvider(::wrapScopeWithJvmMapped)
-            register(FirKotlinScopeProvider::class, kotlinScopeProvider)
-
-            val builtinsModuleData = FirSessionFactory.createModuleDataForBuiltins(
-                mainModuleName,
-                moduleDataProvider.platform,
-                moduleDataProvider.analyzerServices
-            ).also { it.bindSession(this@session) }
-
-            val klibProviders = resolveJsLibraries(module, testServices, configuration).map {
-                KlibBasedSymbolProvider(this@session, moduleDataProvider, kotlinScopeProvider, it)
-            }
-
-            val otherProviders = listOf(
-                FirBuiltinSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
-                FirCloneableSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
-                FirDependenciesSymbolProviderImpl(this)
-            )
-
-            val symbolProvider = FirCompositeSymbolProvider(this, otherProviders + klibProviders)
-
-            register(FirSymbolProvider::class, symbolProvider)
-            register(FirProvider::class, FirLibrarySessionProvider(symbolProvider))
-        }
-    }
+    ): FirSession =
+        FirSessionFactory.createJsLibrarySession(
+            mainModuleName,
+            getAllJsDependenciesPaths(module, testServices),
+            configuration, sessionProvider, moduleDataProvider, languageVersionSettings
+        )
 
     @OptIn(SessionConfiguration::class)
     fun FirSession.registerJsSpecificResolveComponents() {
