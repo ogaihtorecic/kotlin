@@ -16,17 +16,23 @@ package notQualified
 
 external interface Console
 
-// FILE: member-properties.kt
+// FILE: declarations.kt
 
 package foo
 
 import notQualified.Console
 import qualified.CompileError
 
+interface NeverUsedInsideExportedDeclarationsType
+
 interface NonExportedInterface
 interface NonExportedGenericInterface<T>
 open class NonExportedType(val value: Int)
 open class NonExportedGenericType<T>(val value: T)
+
+open class NotExportedChildClass : NonExportedInterface, NeverUsedInsideExportedDeclarationsType, NonExportedType(322)
+open class NotExportedChildGenericClass<T>(value: T) : NonExportedInterface, NeverUsedInsideExportedDeclarationsType, NonExportedGenericInterface<T>, NonExportedGenericType<T>(value)
+
 
 @JsExport
 interface ExportedInterface
@@ -38,6 +44,31 @@ fun producer(value: Int): NonExportedType {
 
 @JsExport
 fun consumer(value: NonExportedType): Int {
+    return value.value
+}
+
+@JsExport
+fun childProducer(value: Int): NotExportedChildClass {
+    return NotExportedChildClass()
+}
+
+@JsExport
+fun childConsumer(value: NotExportedChildClass): Int {
+    return value.value
+}
+
+@JsExport
+fun genericChildProducer<T: NonExportedGenericType<Int>>(value: T): NotExportedChildGenericClass<T> {
+    return NotExportedChildGenericClass<T>(value)
+}
+
+@JsExport
+fun genericChildConsumer<T: NonExportedGenericType<Int>>(value: NotExportedChildGenericClass<T>): T {
+    return value.value
+}
+
+@JsExport
+fun childConsumer(value: NotExportedChildClass): Int {
     return value.value
 }
 
@@ -70,6 +101,12 @@ class G : NonExportedGenericInterface<NonExportedType>
 class H : NonExportedGenericType<NonExportedType>(NonExportedType(42))
 
 @JsExport
+class I : NotExportedChildClass()
+
+@JsExport
+class J : NotExportedChildGenericType<NonExportedType>(NonExportedType(322))
+
+@JsExport
 fun baz(a: Int): kotlin.js.Promise<Int> {
     return kotlin.js.Promise<Int> { res, rej -> res(a) }
 }
@@ -86,10 +123,3 @@ val console: Console
 @JsExport
 val error: CompileError
     get() = js("{}")
-
-typealias NotExportedTypeAlias = NonExportedGenericInterface<NonExportedType>
-
-@JsExport
-fun functionWithTypeAliasInside(x: NotExportedTypeAlias): NotExportedTypeAlias {
-    return x
-}

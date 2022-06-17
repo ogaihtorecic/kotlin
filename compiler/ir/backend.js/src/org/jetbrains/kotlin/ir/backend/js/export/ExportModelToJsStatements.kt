@@ -82,6 +82,7 @@ class ExportModelToJsStatements(
             }
 
             is ExportedConstructor -> emptyList()
+            is ExportedTypeAlias -> emptyList()
             is ExportedConstructSignature -> emptyList()
 
             is ExportedProperty -> {
