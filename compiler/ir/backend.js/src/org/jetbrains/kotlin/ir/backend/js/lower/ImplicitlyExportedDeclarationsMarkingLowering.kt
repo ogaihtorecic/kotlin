@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.isPrimitiveArray
+import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 
 class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBackendContext) : DeclarationTransformer {
@@ -78,7 +79,7 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
             classifier is IrTypeParameterSymbol -> classifier.owner.superTypes.flatMap { it.collectImplicitlyExportedDeclarations() }
                 .toSet()
 
-            classifier is IrClassSymbol -> setOfNotNull(classifier.owner.takeIf { !it.shouldBeMarkedWithImplicitExport() })
+            classifier is IrClassSymbol -> setOfNotNull(classifier.owner.takeIf { it.shouldBeMarkedWithImplicitExport() })
             else -> emptySet()
         }
     }
@@ -90,5 +91,7 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
     private fun IrDeclaration.markWithJsImplicitExport() {
         val jsImplicitExportCtor = context.intrinsics.jsImplicitExportAnnotationSymbol.constructors.single()
         annotations += context.createIrBuilder(symbol).irCall(jsImplicitExportCtor)
+
+        parentClassOrNull?.takeIf { it.shouldBeMarkedWithImplicitExport() }?.markWithJsImplicitExport()
     }
 }

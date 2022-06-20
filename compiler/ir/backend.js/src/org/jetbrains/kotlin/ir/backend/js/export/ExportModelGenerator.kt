@@ -204,6 +204,10 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             }
         }
 
+        if (klass.isJsImplicitExport()) {
+            return Exportability.Implicit
+        }
+
         if (klass.isSingleFieldValueClass)
             return Exportability.Prohibited("Inline class ${klass.fqNameWhenAvailable}")
 
@@ -211,41 +215,24 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun exportDeclarationImplicitly(klass: IrClass): ExportedDeclaration {
-        val baseTypeAliasBody: ExportedType = ExportedType.InlineInterfaceType(
-            listOf(
-                ExportedProperty(
-                    name = "__thePropertyDoesntExist",
-                    type = ExportedType.Primitive.UniqueSymbol,
-                    mutable = false,
-                    isAbstract = false,
-                    isProtected = false,
-                    isField = true,
-                    irGetter = null,
-                    irSetter = null,
-                    exportedObject = null
-                )
-            )
-        )
-        val typeAliasBody = klass.superTypes.fold(baseTypeAliasBody) { acc, type ->
-            if (type !is IrSimpleType) return@fold acc
-            val nonNullType = type.makeNotNull() as IrSimpleType
-            val classifier = nonNullType.classifier
-            when {
-                nonNullType.isPrimitiveType() || nonNullType.isPrimitiveArray() -> acc
-                classifier is IrClassSymbol ->
-                    if (!classifier.owner.isExportedImplicitlyOrExplicitly(context)) {
-                        acc
-                    } else {
-                        ExportedType.IntersectionType(acc, exportType(type))
-                    }
+        val typeParameters = klass.typeParameters.map { it.name.identifier }
+        val superInterfaces = klass.superTypes
+            .filter { (it.classifierOrFail.owner as? IrDeclaration)?.isExportedImplicitlyOrExplicitly(context) ?: false }
+            .map { exportType(it) }
+            .filter { it !is ExportedType.ErrorType }
 
-                else -> acc
-            }
-        }
-        return ExportedTypeAlias(
-            klass.name.identifier,
-            typeAliasBody,
-            klass.typeParameters.map(::exportTypeParameter),
+        val name = klass.getExportedIdentifier()
+        val (_, nestedClasses) = exportClassDeclarations(klass)
+        return ExportedClass(
+            name = name,
+            isInterface = true,
+            isAbstract = false,
+            superClass = null,
+            superInterfaces = superInterfaces,
+            typeParameters = typeParameters,
+            members = emptyList(),
+            nestedClasses = nestedClasses,
+            ir = klass
         )
     }
 

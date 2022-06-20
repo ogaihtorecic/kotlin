@@ -3,6 +3,10 @@ var producer = JS_TESTS.foo.producer;
 var consumer = JS_TESTS.foo.consumer;
 var A = JS_TESTS.foo.A;
 var B = JS_TESTS.foo.B;
+var childProducer = JS_TESTS.foo.childProducer;
+var childConsumer = JS_TESTS.foo.childConsumer;
+var genericChildProducer = JS_TESTS.foo.genericChildProducer;
+var genericChildConsumer = JS_TESTS.foo.genericChildConsumer;
 function assert(condition) {
     if (!condition) {
         throw "Assertion failed";
@@ -17,5 +21,10 @@ function box() {
     assert(consumer(b) == 43);
     assert(consumer(a.value) == 24);
     assert(consumer(a.increment(nonExportedType)) == 43);
+    var oneMoreNonExportedType = childProducer(322);
+    assert(consumer(oneMoreNonExportedType) == 322);
+    assert(childConsumer(oneMoreNonExportedType) == 322);
+    var genericNonExportedType = genericChildProducer(333);
+    assert(genericChildConsumer(genericNonExportedType) == 333);
     return "OK";
 }

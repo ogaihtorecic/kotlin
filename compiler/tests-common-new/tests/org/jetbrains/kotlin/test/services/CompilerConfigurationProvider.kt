@@ -133,6 +133,10 @@ fun createCompilerConfiguration(module: TestModule, configurators: List<Abstract
         configuration.put(JSConfigurationKeys.GENERATE_INLINE_ANONYMOUS_FUNCTIONS, true)
     }
 
+    if (JsEnvironmentConfigurationDirectives.GENERATE_STRICT_IMPLICIT_EXPORT in module.directives) {
+        configuration.put(JSConfigurationKeys.GENERATE_STRICT_IMPLICIT_EXPORT, true)
+    }
+
     if (module.frontendKind == FrontendKinds.FIR) {
         configuration[CommonConfigurationKeys.USE_FIR] = true
     }

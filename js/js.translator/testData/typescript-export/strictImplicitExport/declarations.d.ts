@@ -1,17 +1,27 @@
 declare namespace JS_TESTS {
     type Nullable<T> = T | null | undefined
-    const __doNotImplementIt: unique symbol
-    type __doNotImplementIt = typeof __doNotImplementIt
     namespace foo {
-        type NonExportedInterface = { __thePropertyDoesntExist: unique symbol }
-        type NonExportedGenericInterface<T> = { __thePropertyDoesntExist: unique symbol }
-        type NonExportedType = { __thePropertyDoesntExist: unique symbol }
-        type NonExportedGenericType<T> = { __thePropertyDoesntExist: unique symbol }
-        type NotExportedChildClass = { __thePropertyDoesntExist: unique symbol } & NonExportedInterface & NonExportedType
-        type NotExportedChildGenericClass<T> = { __thePropertyDoesntExist: unique symbol } & NonExportedInterface & NonExportedGenericInterface<T> & NonExportedGenericType<T>
+        interface NonExportedInterface {
+            readonly __doNotUseOrImplementIt: { readonly NonExportedInterface: unique symbol };
+        }
+        interface NonExportedGenericInterface<T> {
+            readonly __doNotUseOrImplementIt: { readonly NonExportedGenericInterface: unique symbol }
+        }
+        interface NonExportedType {
+            readonly __doNotUseOrImplementIt: { readonly NonExportedType: unique symbol }
+        }
+        interface NonExportedGenericType<T> {
+            readonly __doNotUseOrImplementIt: { readonly NonExportedGenericType: unique symbol }
+        }
+        interface NotExportedChildClass extends NonExportedInterface, NonExportedType {
+            readonly __doNotUseOrImplementIt: { readonly NotExportedChildClass: unique symbol } & NonExportedInterface["__doNotUseOrImplementIt"] & NonExportedType["__doNotUseOrImplementIt"]
+        }
+        interface NotExportedChildGenericClass<T> extends NonExportedInterface, NonExportedGenericInterface<T>, NonExportedGenericType<T> {
+            readonly __doNotUseOrImplementIt: { readonly NotExportedChildGenericClass: unique symbol } & NonExportedInterface["__doNotUseOrImplementIt"] & NonExportedGenericInterface<T>["__doNotUseOrImplementIt"] & NonExportedGenericType<T>["__doNotUseOrImplementIt"]
+        }
 
         interface ExportedInterface {
-            readonly __doNotUseIt: __doNotImplementIt;
+            readonly __doNotUseOrImplementIt: { readonly ExportedInterface: unique symbol };
         }
         function producer(value: number): foo.NonExportedType;
         function consumer(value: foo.NonExportedType): number;
@@ -25,28 +35,41 @@ declare namespace JS_TESTS {
             set value(value: foo.NonExportedType);
             increment<T>(t: T): foo.NonExportedType;
         }
-        class B /* extends foo.NonExportedType */ {
+        class B implements foo.NonExportedType {
             constructor(v: number);
+            readonly __doNotUseOrImplementIt: foo.NonExportedType["__doNotUseOrImplementIt"]
         }
-        class C /* implements foo.NonExportedInterface */ {
+        class C implements foo.NonExportedInterface {
             constructor();
+            readonly __doNotUseOrImplementIt: foo.NonExportedInterface["__doNotUseOrImplementIt"]
         }
-        class D implements foo.ExportedInterface/*, foo.NonExportedInterface */ {
+        class D implements foo.ExportedInterface, foo.NonExportedInterface {
             constructor();
-            readonly __doNotUseIt: __doNotImplementIt;
+            readonly __doNotUseOrImplementIt: foo.ExportedInterface["__doNotUseOrImplementIt"] & foo.NonExportedInterface["__doNotUseOrImplementIt"]
         }
-        class E /* extends foo.NonExportedType */ implements foo.ExportedInterface {
+        class E  implements foo.NonExportedType, foo.ExportedInterface {
             constructor();
-            readonly __doNotUseIt: __doNotImplementIt;
+            readonly __doNotUseOrImplementIt: foo.NonExportedType["__doNotUseOrImplementIt"] & foo.ExportedInterface["__doNotUseOrImplementIt"]
         }
-        class F extends foo.A /* implements foo.NonExportedInterface */ {
+        class F extends foo.A implements foo.NonExportedInterface {
             constructor();
+            readonly __doNotUseOrImplementIt: foo.NonExportedInterface["__doNotUseOrImplementIt"]
         }
-        class G /* implements foo.NonExportedGenericInterface<foo.NonExportedType> */ {
+        class G implements foo.NonExportedGenericInterface<foo.NonExportedType> {
             constructor();
+            readonly __doNotUseOrImplementIt: foo.NonExportedGenericInterface<foo.NonExportedType>["__doNotUseOrImplementIt"]
         }
-        class H /* extends foo.NonExportedGenericType<foo.NonExportedType> */ {
+        class H implements foo.NonExportedGenericType<foo.NonExportedType> {
             constructor();
+            readonly __doNotUseOrImplementIt: foo.NonExportedGenericType<foo.NonExportedType>["__doNotUseOrImplementIt"]
+        }
+        class I implements foo.NotExportedChildClass {
+            constructor();
+            readonly __doNotUseOrImplementIt: foo.NotExportedChildClass["__doNotUseOrImplementIt"]
+        }
+        class J implements foo.NotExportedChildGenericClass<foo.NonExportedType> {
+            constructor();
+            readonly __doNotUseOrImplementIt: foo.NotExportedChildGenericClass<foo.NonExportedType>["__doNotUseOrImplementIt"]
         }
         function baz(a: number): Promise<number>;
         function bar(): Error;

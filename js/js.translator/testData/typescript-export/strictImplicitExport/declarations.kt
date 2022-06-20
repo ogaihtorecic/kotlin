@@ -4,6 +4,7 @@
 // SKIP_NODE_JS
 // KJS_WITH_FULL_RUNTIME
 // INFER_MAIN_MODULE
+// GENERATE_STRICT_IMPLICIT_EXPORT
 // MODULE: JS_TESTS
 // FILE: qualified.kt
 @file:JsQualifier("WebAssembly")
@@ -58,17 +59,12 @@ fun childConsumer(value: NotExportedChildClass): Int {
 }
 
 @JsExport
-fun genericChildProducer<T: NonExportedGenericType<Int>>(value: T): NotExportedChildGenericClass<T> {
+fun <T: NonExportedGenericType<Int>> genericChildProducer(value: T): NotExportedChildGenericClass<T> {
     return NotExportedChildGenericClass<T>(value)
 }
 
 @JsExport
-fun genericChildConsumer<T: NonExportedGenericType<Int>>(value: NotExportedChildGenericClass<T>): T {
-    return value.value
-}
-
-@JsExport
-fun childConsumer(value: NotExportedChildClass): Int {
+fun <T: NonExportedGenericType<Int>> genericChildConsumer(value: NotExportedChildGenericClass<T>): T {
     return value.value
 }
 
@@ -104,7 +100,7 @@ class H : NonExportedGenericType<NonExportedType>(NonExportedType(42))
 class I : NotExportedChildClass()
 
 @JsExport
-class J : NotExportedChildGenericType<NonExportedType>(NonExportedType(322))
+class J : NotExportedChildGenericClass<NonExportedType>(NonExportedType(322))
 
 @JsExport
 fun baz(a: Int): kotlin.js.Promise<Int> {
