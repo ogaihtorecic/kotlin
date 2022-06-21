@@ -417,7 +417,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             .filter { it !is ExportedType.ErrorType }
 
         val superInterfaces = superTypes
-            .filter { it.classifierOrFail.isInterface }
+            .filter { it.shouldPresentInsideImplementsClause() }
             .map { exportType(it, false) }
             .filter { it !is ExportedType.ErrorType }
 
@@ -450,6 +450,11 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
 
     private fun IrSimpleType.collectSuperTransitiveHierarchy(): Set<IrType> =
         transitiveExportCollector.collectSuperTypesTransitiveHierarchyFor(this)
+
+    private fun IrType.shouldPresentInsideImplementsClause(): Boolean {
+        val classifier = classifierOrFail
+        return classifier.isInterface || (classifier.owner as? IrDeclaration)?.isJsImplicitExport() == true
+    }
 
     private fun exportAsEnumMember(
         candidate: IrDeclarationWithName,
@@ -489,7 +494,9 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun IrType.canBeUsedAsSuperTypeOfExportedClasses(): Boolean =
-        !this.isAny() && classifierOrNull != context.irBuiltIns.enumClass
+        !isAny() &&
+                classifierOrNull != context.irBuiltIns.enumClass &&
+                (classifierOrNull?.owner as? IrDeclaration)?.isJsImplicitExport() != true
 
     private fun exportTypeArgument(type: IrTypeArgument): ExportedType {
         if (type is IrTypeProjection)

@@ -29,8 +29,5 @@ function box(): string {
     assert(consumer(oneMoreNonExportedType) == 322)
     assert(childConsumer(oneMoreNonExportedType) == 322)
 
-    const genericNonExportedType = genericChildProducer(333)
-    assert(genericChildConsumer(genericNonExportedType) == 333)
-
     return "OK";
 }

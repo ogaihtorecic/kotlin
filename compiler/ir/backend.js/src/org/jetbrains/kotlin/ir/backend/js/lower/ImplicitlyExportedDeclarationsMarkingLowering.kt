@@ -75,7 +75,7 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
         val classifier = nonNullType.classifier
 
         return when {
-            nonNullType.isPrimitiveType() || nonNullType.isPrimitiveArray() -> emptySet()
+            nonNullType.isPrimitiveType() || nonNullType.isPrimitiveArray() || nonNullType.isAny() -> emptySet()
             classifier is IrTypeParameterSymbol -> classifier.owner.superTypes.flatMap { it.collectImplicitlyExportedDeclarations() }
                 .toSet()
 
@@ -85,7 +85,7 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
     }
 
     private fun IrDeclaration.shouldBeMarkedWithImplicitExport(): Boolean {
-        return !isExported(context) && !isJsImplicitExport()
+        return this is IrClass && !isExternal && !isExported(context) && !isJsImplicitExport()
     }
 
     private fun IrDeclaration.markWithJsImplicitExport() {

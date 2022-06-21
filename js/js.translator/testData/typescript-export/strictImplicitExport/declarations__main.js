@@ -24,7 +24,5 @@ function box() {
     var oneMoreNonExportedType = childProducer(322);
     assert(consumer(oneMoreNonExportedType) == 322);
     assert(childConsumer(oneMoreNonExportedType) == 322);
-    var genericNonExportedType = genericChildProducer(333);
-    assert(genericChildConsumer(genericNonExportedType) == 333);
     return "OK";
 }

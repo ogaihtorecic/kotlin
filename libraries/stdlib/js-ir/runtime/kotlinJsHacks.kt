@@ -49,5 +49,5 @@ internal annotation class JsFun(val code: String)
  * doesn't contain @JsExport annotation
  * This information is used for generating special tagged types inside d.ts files, for more strict usage of implicitly exported entities
  */
-@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPEALIAS)
+@Target(AnnotationTarget.CLASS)
 internal annotation class JsImplicitExport()

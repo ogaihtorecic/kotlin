@@ -26,6 +26,13 @@ import qualified.CompileError
 
 interface NeverUsedInsideExportedDeclarationsType
 
+open class NonExportedParent {
+    open class NonExportedSecond {
+        open class NonExportedUsedChild
+        open class NonExportedUnusedChild
+    }
+}
+
 interface NonExportedInterface
 interface NonExportedGenericInterface<T>
 open class NonExportedType(val value: Int)
@@ -69,7 +76,7 @@ fun <T: NonExportedGenericType<Int>> genericChildConsumer(value: NotExportedChil
 }
 
 @JsExport
-open class A(var value: NonExportedType) {
+open class A(var value: NonExportedType): NonExportedParent.NonExportedSecond.NonExportedUsedChild() {
     fun <T: NonExportedType> increment(t: T): NonExportedType {
         return NonExportedType(value = t.value + 1)
     }
