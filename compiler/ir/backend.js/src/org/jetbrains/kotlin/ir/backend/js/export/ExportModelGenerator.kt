@@ -222,7 +222,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             .filter { it !is ExportedType.ErrorType }
 
         val name = klass.getExportedIdentifier()
-        val (_, nestedClasses) = exportClassDeclarations(klass)
+        val (members, nestedClasses) = exportClassDeclarations(klass)
         return ExportedClass(
             name = name,
             isInterface = true,
@@ -230,7 +230,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             superClass = null,
             superInterfaces = superInterfaces,
             typeParameters = typeParameters,
-            members = emptyList(),
+            members = members,
             nestedClasses = nestedClasses,
             ir = klass
         )
@@ -296,9 +296,11 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     ): ExportedClassDeclarationsInfo {
         val members = mutableListOf<ExportedDeclaration>()
         val nestedClasses = mutableListOf<ExportedClass>()
+        val isImplicitlyExportedClass = klass.isJsImplicitExport()
 
         for (declaration in klass.declarations) {
             val candidate = getExportCandidate(declaration) ?: continue
+            if (isImplicitlyExportedClass && candidate !is IrClass) continue
             if (!shouldDeclarationBeExportedImplicitlyOrExplicitly(candidate, context)) continue
 
             val processingResult = specialProcessing(candidate)
@@ -353,13 +355,13 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun IrClass.shouldNotBeImplemented(): Boolean {
-        return isInterface && !isExternal
+        return isInterface && !isExternal || isJsImplicitExport()
     }
 
     private fun IrClass.shouldContainImplementationOfMagicProperty(superTypes: Iterable<IrType>): Boolean {
         return !isExternal && superTypes.any {
             val superClass = it.classOrNull?.owner ?: return@any false
-            superClass.isInterface && superClass.isExported(context)
+            superClass.isInterface && superClass.isExported(context) || superClass.isJsImplicitExport()
         }
     }
 
@@ -368,11 +370,13 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun MutableList<ExportedDeclaration>.addMagicPropertyForInterfaceImplementation(klass: IrClass, superTypes: Iterable<IrType>) {
-        val superTypesToInheritanceMagicProperty = superTypes.filter { it.shouldAddMagicPropertyOfSuper(context) }
+        val allSuperTypesWithMagicProperty = superTypes.filter { it.shouldAddMagicPropertyOfSuper(context) }
 
-        if (superTypesToInheritanceMagicProperty.isEmpty()) return
+        if (allSuperTypesWithMagicProperty.isEmpty()) {
+            return
+        }
 
-        val intersectionOfTypes = superTypesToInheritanceMagicProperty
+        val intersectionOfTypes = allSuperTypesWithMagicProperty
             .map { ExportedType.PropertyType(exportType(it), ExportedType.LiteralType.StringLiteralType(magicPropertyName)) }
             .reduce(ExportedType::IntersectionType)
             .let { if (klass.shouldNotBeImplemented()) ExportedType.IntersectionType(klass.generateTagType(), it) else it }
@@ -384,9 +388,12 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         return classOrNull?.owner?.isOwnMagicPropertyAdded() ?: false
     }
 
-    private fun IrClass.isOwnMagicPropertyAdded(): Boolean {
+    private fun IrClass.isOwnMagicPropertyAdded(context: JsIrBackendContext): Boolean {
+        if (isJsImplicitExport()) return true
         if (!isExported(context)) return false
-        return isInterface && !isExternal || superTypes.any { it.classOrNull?.owner?.isOwnMagicPropertyAdded() ?: false }
+        return isInterface && !isExternal || superTypes.any {
+            it.classOrNull?.owner?.isOwnMagicPropertyAdded(context) == true
+        }
     }
 
     private fun IrClass.generateTagType(): ExportedType {

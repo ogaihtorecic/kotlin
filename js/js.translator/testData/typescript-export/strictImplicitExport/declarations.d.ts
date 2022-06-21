@@ -3,7 +3,7 @@ declare namespace JS_TESTS {
     namespace foo {
         interface ExportedInterface {
             readonly __doNotUseOrImplementIt: {
-                readonly ExportedInterface: unique symbol;
+                readonly "foo.ExportedInterface": unique symbol;
             };
         }
         function producer(value: number): foo.NonExportedType;
@@ -35,10 +35,10 @@ declare namespace JS_TESTS {
             constructor();
             readonly __doNotUseOrImplementIt: foo.NonExportedType["__doNotUseOrImplementIt"] & foo.ExportedInterface["__doNotUseOrImplementIt"];
         }
-        // class F extends foo.A implements foo.NonExportedInterface {
-        //     constructor();
-        //     readonly __doNotUseOrImplementIt: foo.NonExportedInterface["__doNotUseOrImplementIt"];
-        // }
+        class F extends foo.A implements foo.NonExportedInterface {
+            constructor();
+            readonly __doNotUseOrImplementIt: foo.A["__doNotUseOrImplementIt"] & foo.NonExportedInterface["__doNotUseOrImplementIt"];
+        }
         class G implements foo.NonExportedGenericInterface<foo.NonExportedType> {
             constructor();
             readonly __doNotUseOrImplementIt: foo.NonExportedGenericInterface<foo.NonExportedType>["__doNotUseOrImplementIt"];
@@ -61,51 +61,51 @@ declare namespace JS_TESTS {
         const error: WebAssembly.CompileError;
         interface NonExportedParent {
             readonly __doNotUseOrImplementIt: {
-                readonly NonExportedParent: unique symbol;
+                readonly "foo.NonExportedParent": unique symbol;
             };
         }
         namespace NonExportedParent {
             interface NonExportedSecond {
                 readonly __doNotUseOrImplementIt: {
-                    readonly NonExportedSecond: unique symbol;
+                    readonly "foo.NonExportedParent.NonExportedSecond": unique symbol;
                 };
             }
             namespace NonExportedSecond {
                 interface NonExportedUsedChild {
                     readonly __doNotUseOrImplementIt: {
-                        readonly NonExportedUsedChild: unique symbol;
+                        readonly "foo.NonExportedParent.NonExportedSecond.NonExportedUsedChild": unique symbol;
                     };
                 }
             }
         }
         interface NonExportedInterface {
             readonly __doNotUseOrImplementIt: {
-                readonly NonExportedInterface: unique symbol;
+                readonly "foo.NonExportedInterface": unique symbol;
             };
         }
         interface NonExportedGenericInterface<T> {
             readonly __doNotUseOrImplementIt: {
-                readonly NonExportedGenericInterface: unique symbol;
+                readonly "foo.NonExportedGenericInterface": unique symbol;
             };
         }
         interface NonExportedType {
             readonly __doNotUseOrImplementIt: {
-                readonly NonExportedType: unique symbol;
+                readonly "foo.NonExportedType": unique symbol;
             };
         }
         interface NonExportedGenericType<T> {
             readonly __doNotUseOrImplementIt: {
-                readonly NonExportedGenericType: unique symbol;
+                readonly "foo.NonExportedGenericType": unique symbol;
             };
         }
         interface NotExportedChildClass extends foo.NonExportedInterface, foo.NonExportedType {
             readonly __doNotUseOrImplementIt: {
-                readonly NotExportedChildClass: unique symbol;
+                readonly "foo.NotExportedChildClass": unique symbol;
             } & foo.NonExportedInterface["__doNotUseOrImplementIt"] & foo.NonExportedType["__doNotUseOrImplementIt"];
         }
         interface NotExportedChildGenericClass<T> extends foo.NonExportedInterface, foo.NonExportedGenericInterface<T>, foo.NonExportedGenericType<T> {
             readonly __doNotUseOrImplementIt: {
-                readonly NotExportedChildGenericClass: unique symbol;
+                readonly "foo.NotExportedChildGenericClass": unique symbol;
             } & foo.NonExportedInterface["__doNotUseOrImplementIt"] & foo.NonExportedGenericInterface<T>["__doNotUseOrImplementIt"] & foo.NonExportedGenericType<T>["__doNotUseOrImplementIt"];
         }
     }
