@@ -223,7 +223,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
 
         val name = klass.getExportedIdentifier()
         val (members, nestedClasses) = exportClassDeclarations(klass)
-        return ExportedClass(
+        return ExportedRegularClass(
             name = name,
             isInterface = true,
             isAbstract = false,

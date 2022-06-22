@@ -87,7 +87,7 @@ class ExportModelToTsDeclarations {
             is ExportedProperty -> generateTypeScriptString(indent, prefix)
             is ExportedObject -> generateTypeScriptString(indent, prefix)
             is ExportedRegularClass -> generateTypeScriptString(indent, prefix)
-            is ExportedTypeAlias -> ""
+        }
 
     private fun ErrorDeclaration.generateTypeScriptString(): String {
         return "/* ErrorDeclaration: $message */"

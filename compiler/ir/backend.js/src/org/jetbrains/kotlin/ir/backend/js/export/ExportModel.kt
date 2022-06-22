@@ -61,12 +61,6 @@ class ExportedProperty(
     val irSetter: IrFunction? = null,
 ) : ExportedDeclaration()
 
-class ExportedTypeAlias(
-    val name: String,
-    val value: ExportedType,
-    val typeParameters: List<ExportedType.TypeParameter> = emptyList(),
-) : ExportedDeclaration()
-
 // TODO: Cover all cases with frontend and disable error declarations
 class ErrorDeclaration(val message: String) : ExportedDeclaration()
 
