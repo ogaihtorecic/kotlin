@@ -13,7 +13,6 @@ import org.jetbrains.kotlin.ir.backend.js.utils.isJsImplicitExport
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
-import org.jetbrains.kotlin.ir.symbols.IrTypeAliasSymbol
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.constructors
@@ -40,12 +39,9 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
     }
 
     private fun IrClass.collectImplicitlyExportedDeclarations(): Set<IrDeclaration> {
-        val types = buildSet {
-            addAll(superTypes)
-            addAll(typeParameters.flatMap { it.superTypes })
-        }
-
-        return types.flatMap { it.collectImplicitlyExportedDeclarations() }.toSet()
+        return typeParameters
+            .flatMap { it.superTypes }.toSet()
+            .flatMap { it.collectImplicitlyExportedDeclarations() }.toSet()
     }
 
 
@@ -75,7 +71,7 @@ class ImplicitlyExportedDeclarationsMarkingLowering(private val context: JsIrBac
         val classifier = nonNullType.classifier
 
         return when {
-            nonNullType.isPrimitiveType() || nonNullType.isPrimitiveArray() || nonNullType.isAny() -> emptySet()
+            nonNullType.isPrimitiveType() || nonNullType.isPrimitiveArray() || nonNullType.isAny() || nonNullType.isUnit() -> emptySet()
             classifier is IrTypeParameterSymbol -> classifier.owner.superTypes.flatMap { it.collectImplicitlyExportedDeclarations() }
                 .toSet()
 

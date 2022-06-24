@@ -214,20 +214,20 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         return Exportability.Allowed
     }
 
-    private fun exportDeclarationImplicitly(klass: IrClass): ExportedDeclaration {
+    private fun exportDeclarationImplicitly(klass: IrClass, superTypes: Iterable<IrType>): ExportedDeclaration {
         val typeParameters = klass.typeParameters.map { it.name.identifier }
-        val superInterfaces = klass.superTypes
+        val superInterfaces = superTypes
             .filter { (it.classifierOrFail.owner as? IrDeclaration)?.isExportedImplicitlyOrExplicitly(context) ?: false }
             .map { exportType(it) }
             .filter { it !is ExportedType.ErrorType }
 
         val name = klass.getExportedIdentifier()
-        val (members, nestedClasses) = exportClassDeclarations(klass)
+        val (members, nestedClasses) = exportClassDeclarations(klass, superTypes)
         return ExportedRegularClass(
             name = name,
             isInterface = true,
             isAbstract = false,
-            superClass = null,
+            superClasses = emptyList(),
             superInterfaces = superInterfaces,
             typeParameters = typeParameters,
             members = members,
@@ -240,7 +240,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         when (val exportability = classExportability(klass)) {
             is Exportability.Prohibited -> error(exportability.reason)
             Exportability.NotNeeded -> return null
-            Exportability.Implicit -> return exportDeclarationImplicitly(klass)
+            Exportability.Implicit -> return exportDeclarationImplicitly(klass, superTypes)
             Exportability.Allowed -> {}
         }
 
@@ -258,7 +258,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         when (val exportability = classExportability(klass)) {
             is Exportability.Prohibited -> error(exportability.reason)
             Exportability.NotNeeded -> return null
-            Exportability.Implicit -> return exportDeclarationImplicitly(klass)
+            Exportability.Implicit -> return exportDeclarationImplicitly(klass, superTypes)
             Exportability.Allowed -> {}
         }
 

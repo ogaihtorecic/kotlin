@@ -1,6 +1,7 @@
 declare namespace JS_TESTS {
     type Nullable<T> = T | null | undefined
     namespace foo {
+        const forth: foo.Forth;
         interface ExportedInterface {
             readonly __doNotUseOrImplementIt: {
                 readonly "foo.ExportedInterface": unique symbol;
@@ -17,6 +18,7 @@ declare namespace JS_TESTS {
             get value(): foo.NonExportedType;
             set value(value: foo.NonExportedType);
             increment<T extends foo.NonExportedType>(t: T): foo.NonExportedType;
+            getNonExportedUserChild(): foo.NonExportedParent.NonExportedSecond.NonExportedUsedChild;
             readonly __doNotUseOrImplementIt: foo.NonExportedParent.NonExportedSecond.NonExportedUsedChild["__doNotUseOrImplementIt"];
         }
         class B implements foo.NonExportedType {
@@ -57,8 +59,26 @@ declare namespace JS_TESTS {
         }
         function baz(a: number): Promise<number>;
         function bar(): Error;
+        function pep<T extends foo.NonExportedInterface & foo.NonExportedGenericInterface<number>>(x: T): void;
         const console: Console;
         const error: WebAssembly.CompileError;
+        interface IA {
+            readonly __doNotUseOrImplementIt: {
+                readonly "foo.IA": unique symbol;
+            };
+        }
+        class Third extends /* foo.Second */ foo.First {
+            constructor();
+        }
+        class Sixth extends /* foo.Fifth */ foo.Third implements foo.Forth, foo.IB, foo.IC {
+            constructor();
+            readonly __doNotUseOrImplementIt: foo.Forth["__doNotUseOrImplementIt"] & foo.IB["__doNotUseOrImplementIt"] & foo.IC["__doNotUseOrImplementIt"];
+        }
+        class First {
+            constructor();
+        }
+        function acceptForthLike<T extends foo.Forth>(forth: T): void;
+        function acceptMoreGenericForthLike<T extends foo.IB & foo.IC & foo.Third>(forth: T): void;
         interface NonExportedParent {
             readonly __doNotUseOrImplementIt: {
                 readonly "foo.NonExportedParent": unique symbol;
@@ -107,6 +127,21 @@ declare namespace JS_TESTS {
             readonly __doNotUseOrImplementIt: {
                 readonly "foo.NotExportedChildGenericClass": unique symbol;
             } & foo.NonExportedInterface["__doNotUseOrImplementIt"] & foo.NonExportedGenericInterface<T>["__doNotUseOrImplementIt"] & foo.NonExportedGenericType<T>["__doNotUseOrImplementIt"];
+        }
+        interface IB extends foo.IA {
+            readonly __doNotUseOrImplementIt: {
+                readonly "foo.IB": unique symbol;
+            } & foo.IA["__doNotUseOrImplementIt"];
+        }
+        interface IC extends foo.IB {
+            readonly __doNotUseOrImplementIt: {
+                readonly "foo.IC": unique symbol;
+            } & foo.IB["__doNotUseOrImplementIt"];
+        }
+        interface Forth extends foo.Third, foo.IB, foo.IC {
+            readonly __doNotUseOrImplementIt: {
+                readonly "foo.Forth": unique symbol;
+            } & foo.IB["__doNotUseOrImplementIt"] & foo.IC["__doNotUseOrImplementIt"];
         }
     }
 }

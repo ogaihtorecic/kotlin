@@ -80,6 +80,10 @@ open class A(var value: NonExportedType): NonExportedParent.NonExportedSecond.No
     fun <T: NonExportedType> increment(t: T): NonExportedType {
         return NonExportedType(value = t.value + 1)
     }
+
+    fun getNonExportedUserChild(): NonExportedParent.NonExportedSecond.NonExportedUsedChild {
+        return this
+    }
 }
 
 @JsExport
@@ -120,9 +124,46 @@ fun bar(): Throwable {
 }
 
 @JsExport
+fun <T> pep(x: T) where T: NonExportedInterface,
+                        T: NonExportedGenericInterface<Int>
+{}
+
+@JsExport
 val console: Console
     get() = js("console")
 
 @JsExport
 val error: CompileError
     get() = js("{}")
+
+// Save hierarhy
+
+@JsExport
+interface IA
+
+interface IB : IA
+
+interface IC : IB
+
+@JsExport
+open class Third: Second()
+
+open class Forth: Third(), IB, IC
+
+open class Fifth: Forth()
+
+@JsExport
+class Sixth: Fifth(), IC
+@JsExport
+open class First
+
+open class Second: First()
+
+@JsExport
+fun <T : Forth> acceptForthLike(forth: T) {}
+
+@JsExport
+fun <T> acceptMoreGenericForthLike(forth: T) where T: IB, T: IC, T: Third {}
+
+@JsExport
+val forth = Forth()
