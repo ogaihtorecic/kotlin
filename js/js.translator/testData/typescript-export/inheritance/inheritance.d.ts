@@ -13,7 +13,7 @@ declare namespace JS_TESTS {
         }
     }
     namespace foo {
-        const fifth: (foo.Third & foo.IA)/* foo.Fifth */;
+        const fifth: (foo.Third<boolean> & foo.IA)/* foo.Fifth<boolean> */;
         abstract class AC implements foo.I2 {
             constructor();
             get x(): string;
@@ -106,17 +106,17 @@ declare namespace JS_TESTS {
                 readonly "foo.IA": unique symbol;
             };
         }
-        class Third extends /* foo.Second */ foo.First {
+        class Third<T> extends /* foo.Second */ foo.First {
             constructor();
         }
-        class Sixth extends /* foo.Fifth */ foo.Third implements foo.IA/*, foo.IC */ {
+        class Sixth extends /* foo.Fifth<number> */ foo.Third<number> implements foo.IA/*, foo.IC */ {
             constructor();
             readonly __doNotUseOrImplementIt: foo.IA["__doNotUseOrImplementIt"];
         }
         class First {
             constructor();
         }
-        function acceptForthLike<T extends (foo.Third & foo.IA)/* foo.Forth */>(forth: T): void;
+        function acceptForthLike<T extends (foo.Third<string> & foo.IA)/* foo.Forth<string> */>(forth: T): void;
         function acceptMoreGenericForthLike<T extends foo.IA/* foo.IB */ & foo.IA/* foo.IC */ & foo.First/* foo.Second */>(forth: T): void;
     }
 }
