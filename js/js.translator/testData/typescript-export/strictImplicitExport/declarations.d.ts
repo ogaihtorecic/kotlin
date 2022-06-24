@@ -70,9 +70,9 @@ declare namespace JS_TESTS {
         class Third extends /* foo.Second */ foo.First {
             constructor();
         }
-        class Sixth extends /* foo.Fifth */ foo.Third implements foo.Forth, foo.IB, foo.IC {
+        class Sixth extends /* foo.Fifth */ foo.Third implements foo.Forth, foo.IC {
             constructor();
-            readonly __doNotUseOrImplementIt: foo.Forth["__doNotUseOrImplementIt"] & foo.IB["__doNotUseOrImplementIt"] & foo.IC["__doNotUseOrImplementIt"];
+            readonly __doNotUseOrImplementIt: foo.Forth["__doNotUseOrImplementIt"] & foo.IC["__doNotUseOrImplementIt"];
         }
         class First {
             constructor();

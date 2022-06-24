@@ -39,17 +39,26 @@ class TransitiveExportCollector(val context: JsIrBackendContext) {
             .toSet()
     }
 
+    private fun IrSimpleType.findNearestExportedClass(typeSubstitutionMap: SubstitutionMap): IrSimpleType? {
+        val classifier = classifier as? IrClassSymbol ?: return null
+        if (classifier.owner.isExported(context)) return getTypeAppliedToRightTypeArguments(typeSubstitutionMap) as IrSimpleType
+
+        return classifier.superTypes()
+            .firstNotNullOfOrNull { (it as? IrSimpleType)?.findNearestExportedClass(typeSubstitutionMap) }
+    }
+
     private fun IrSimpleType.collectTransitiveHierarchy(typeSubstitutionMap: SubstitutionMap): Set<IrType> {
         val owner = classifier.owner as? IrClass ?: return emptySet()
         return when {
             isBuiltInClass(owner) || isStdLibClass(owner) -> emptySet()
             owner.isExportedImplicitlyOrExplicitly(context) -> setOf(getTypeAppliedToRightTypeArguments(typeSubstitutionMap) as IrType).run {
                 if (!owner.isInterface && owner.isJsImplicitExport()) {
-                    plus(collectSuperTypesTransitiveHierarchy(typeSubstitutionMap))
+                    findNearestExportedClass(typeSubstitutionMap)?.let { plus(it) } ?: this
                 } else {
                     this
                 }
             }
+
             else -> collectSuperTypesTransitiveHierarchy(typeSubstitutionMap)
         }
     }
