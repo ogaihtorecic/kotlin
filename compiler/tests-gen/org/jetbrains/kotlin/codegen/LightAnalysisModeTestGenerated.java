@@ -1774,6 +1774,16 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
             runTest("compiler/testData/codegen/box/bridges/kt24193.kt");
         }
 
+        @TestMetadata("kt52929_platformDependent.kt")
+        public void ignoreKt52929_platformDependent() throws Exception {
+            runTest("compiler/testData/codegen/box/bridges/kt52929_platformDependent.kt");
+        }
+
+        @TestMetadata("specialBridgeTypesJava.kt")
+        public void ignoreSpecialBridgeTypesJava() throws Exception {
+            runTest("compiler/testData/codegen/box/bridges/specialBridgeTypesJava.kt");
+        }
+
         private void runTest(String testDataFilePath) throws Exception {
             KotlinTestUtils.runTest(this::doTest, TargetBackend.JVM, testDataFilePath);
         }
@@ -1945,6 +1955,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
         @TestMetadata("kt46389_jvmDefault.kt")
         public void testKt46389_jvmDefault() throws Exception {
             runTest("compiler/testData/codegen/box/bridges/kt46389_jvmDefault.kt");
+        }
+
+        @TestMetadata("kt52929.kt")
+        public void testKt52929() throws Exception {
+            runTest("compiler/testData/codegen/box/bridges/kt52929.kt");
         }
 
         @TestMetadata("longChainOneBridge.kt")
