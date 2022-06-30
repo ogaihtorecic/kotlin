@@ -221,7 +221,20 @@ internal interface ContextUtils : RuntimeAware {
     val IrClass.typeInfoPtr: ConstPointer
         get() {
             return if (isExternal(this)) {
-                constPointer(importGlobal(this.computeTypeInfoSymbolName(), runtime.typeInfoType,
+                val typeInfoSymbolName = if (KonanBinaryInterface.isExported(this)) {
+                    this.computeTypeInfoSymbolName()
+                } else {
+                    val externalPackageFragment = this.getPackageFragment() as? IrExternalPackageFragment
+                            ?: error("Expected an external package fragment for $descriptor")
+                    val moduleDescriptor = externalPackageFragment.packageFragmentDescriptor.containingDeclaration
+                    val moduleDeserializer = context.irLinker.moduleDeserializers[moduleDescriptor]
+                            ?: error("No module deserializer for $moduleDescriptor")
+                    val idSig = moduleDeserializer.descriptorSignatures[descriptor] ?: error("No signature for $descriptor")
+                    val containerName = (idSig.topLevelSignature().fileSignature() ?: error("No file for $idSig")).fileName
+                    this.computePrivateTypeInfoSymbolName(containerName)
+                }
+
+                constPointer(importGlobal(typeInfoSymbolName, runtime.typeInfoType,
                         origin = this.llvmSymbolOrigin))
             } else {
                 context.llvmDeclarations.forClass(this).typeInfo

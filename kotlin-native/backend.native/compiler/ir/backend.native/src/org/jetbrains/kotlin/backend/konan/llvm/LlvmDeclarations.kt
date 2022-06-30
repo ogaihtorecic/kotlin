@@ -175,7 +175,12 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
         val typeInfoSymbolName = if (declaration.isExported()) {
             declaration.computeTypeInfoSymbolName()
         } else {
-            "ktype:$internalName"
+            if (!context.config.producePerFileCache)
+                "ktype:$internalName"
+            else {
+                val containerName = (context.config.libraryToCache!!.strategy as CacheDeserializationStrategy.SingleFile).filePath
+                declaration.computePrivateTypeInfoSymbolName(containerName)
+            }
         }
 
         if (declaration.typeInfoHasVtableAttached) {
@@ -201,7 +206,8 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
                     throw IllegalArgumentException("Global '$typeInfoSymbolName' already exists")
                 }
             } else {
-                LLVMSetLinkage(llvmTypeInfoPtr, LLVMLinkage.LLVMInternalLinkage)
+                if (!context.config.producePerFileCache || declaration !in context.constructedFromExportedInlineFunctions)
+                    LLVMSetLinkage(llvmTypeInfoPtr, LLVMLinkage.LLVMInternalLinkage)
             }
 
             typeInfoPtr = constPointer(llvmTypeInfoPtr)

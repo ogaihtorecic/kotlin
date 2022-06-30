@@ -515,6 +515,7 @@ internal class Context(config: KonanConfig) : KonanBackendContext(config) {
     val classFields = mutableListOf<SerializedClassFields>()
 
     val calledFromExportedInlineFunctions = mutableSetOf<IrFunction>()
+    val constructedFromExportedInlineFunctions = mutableSetOf<IrClass>()
 
     val targetAbiInfo: TargetAbiInfo by lazy {
         when {

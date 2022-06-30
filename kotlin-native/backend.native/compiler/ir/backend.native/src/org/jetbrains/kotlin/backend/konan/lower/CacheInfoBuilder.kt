@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.backend.konan.serialization.KonanManglerIr
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrFunctionReference
 import org.jetbrains.kotlin.ir.expressions.IrPropertyReference
 import org.jetbrains.kotlin.ir.util.*
@@ -64,6 +65,7 @@ internal class CacheInfoBuilder(private val context: Context, private val module
             private fun processFunction(function: IrFunction) {
                 if (function.getPackageFragment() !is IrExternalPackageFragment) {
                     context.calledFromExportedInlineFunctions.add(function)
+                    (function as? IrConstructor)?.constructedClass?.let { context.constructedFromExportedInlineFunctions.add(it) }
                     if (function.isInline && !function.isExported) {
                         // An exported inline function calls a non-exported inline function:
                         // should track its callees as well as it won't be handled by the main visitor.
@@ -73,6 +75,12 @@ internal class CacheInfoBuilder(private val context: Context, private val module
             }
 
             override fun visitCall(expression: IrCall) {
+                expression.acceptChildrenVoid(this)
+
+                processFunction(expression.symbol.owner)
+            }
+
+            override fun visitConstructorCall(expression: IrConstructorCall) {
                 expression.acceptChildrenVoid(this)
 
                 processFunction(expression.symbol.owner)

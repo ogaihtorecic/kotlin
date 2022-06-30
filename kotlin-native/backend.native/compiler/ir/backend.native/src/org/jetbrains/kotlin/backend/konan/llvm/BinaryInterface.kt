@@ -45,9 +45,11 @@ object KonanBinaryInterface {
 
     val IrField.symbolName: String get() = withPrefix(MangleConstant.FIELD_PREFIX, fieldSymbolNameImpl())
 
-    val IrClass.typeInfoSymbolName: String get() = withPrefix(MangleConstant.CLASS_PREFIX, typeInfoSymbolNameImpl())
+    val IrClass.typeInfoSymbolName: String get() = typeInfoSymbolNameImpl(null)
 
     fun IrFunction.privateSymbolName(containerName: String): String = funSymbolNameImpl(containerName)
+
+    fun IrClass.privateTypeInfoSymbolName(containerName: String): String = typeInfoSymbolNameImpl(containerName)
 
     fun isExported(declaration: IrDeclaration) = exportChecker.run {
         check(declaration, SpecialDeclarationType.REGULAR) || declaration.isPlatformSpecificExported()
@@ -78,8 +80,9 @@ object KonanBinaryInterface {
         return "$containingDeclarationPart$name"
     }
 
-    private fun IrClass.typeInfoSymbolNameImpl(): String {
-        return this.fqNameForIrSerialization.toString()
+    private fun IrClass.typeInfoSymbolNameImpl(containerName: String?): String {
+        val fqName = fqNameForIrSerialization.toString()
+        return withPrefix(MangleConstant.CLASS_PREFIX, containerName?.plus(".$fqName") ?: fqName)
     }
 }
 
@@ -126,6 +129,8 @@ fun IrFunction.computePrivateSymbolName(containerName: String) = with(KonanBinar
 fun IrField.computeSymbolName() = with(KonanBinaryInterface) { symbolName }.replaceSpecialSymbols()
 
 fun IrClass.computeTypeInfoSymbolName() = with(KonanBinaryInterface) { typeInfoSymbolName }.replaceSpecialSymbols()
+
+fun IrClass.computePrivateTypeInfoSymbolName(containerName: String) = with(KonanBinaryInterface) { privateTypeInfoSymbolName(containerName) }.replaceSpecialSymbols()
 
 private fun String.replaceSpecialSymbols() =
         // '@' is used for symbol versioning in GCC: https://gcc.gnu.org/wiki/SymbolVersioning.
