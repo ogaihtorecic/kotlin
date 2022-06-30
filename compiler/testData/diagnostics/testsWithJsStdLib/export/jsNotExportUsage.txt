@@ -1,0 +1,76 @@
+package
+
+package foo {
+
+    @kotlin.js.JsExport public interface ExportedInterface {
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+
+        @kotlin.js.JsNotExport public companion object Companion {
+            private constructor Companion()
+            public final val foo: kotlin.String = "FOO"
+            public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+            public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+            public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+        }
+
+        @kotlin.js.JsNotExport public final class NotExportableNestedInsideInterface {
+            public constructor NotExportableNestedInsideInterface()
+            public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+            public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+            public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+        }
+    }
+
+    public final class NotExported {
+        public constructor NotExported()
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        @kotlin.js.JsNotExport public final fun foo(): kotlin.String
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
+    @kotlin.js.JsExport public final class OnlyFooParamExported {
+        @kotlin.js.JsNotExport public constructor OnlyFooParamExported()
+        public constructor OnlyFooParamExported(/*0*/ foo: kotlin.String)
+        public final val foo: kotlin.String
+        @kotlin.js.JsNotExport public final val kotlin.String.notExportableExentsionProperty: kotlin.String
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        @kotlin.js.JsNotExport public final fun notExportableReturn(): kotlin.collections.List<kotlin.String>
+        @kotlin.js.JsNotExport public final suspend fun notExportableSuspend(): kotlin.String
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+        @kotlin.js.JsNotExport public final inline fun </*0*/ A, /*1*/ reified B> A.notExportableReified(): kotlin.Boolean
+
+        @kotlin.js.JsNotExport public final annotation class NotExportableAnnotation : kotlin.Annotation {
+            public constructor NotExportableAnnotation()
+            public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+            public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+            public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+        }
+
+        @kotlin.js.JsNotExport public final value class NotExportableInlineClass {
+            public constructor NotExportableInlineClass(/*0*/ value: kotlin.Int)
+            public final val value: kotlin.Int
+            public open override /*1*/ /*synthesized*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+            public open override /*1*/ /*synthesized*/ fun hashCode(): kotlin.Int
+            public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
+        }
+    }
+
+    @kotlin.js.JsExport public final class Parent {
+        public constructor Parent()
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+
+        @kotlin.js.JsNotExport public final class NotExported {
+            public constructor NotExported()
+            public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+            @kotlin.js.JsNotExport public final fun foo(): kotlin.String
+            public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+            public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+        }
+    }
+}

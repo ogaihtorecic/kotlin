@@ -241,6 +241,14 @@ public final annotation class JsExport : kotlin.Annotation {
     public constructor JsExport()
 }
 
+@kotlin.js.ExperimentalJsExport
+@kotlin.annotation.Retention(value = AnnotationRetention.BINARY)
+@kotlin.annotation.Target(allowedTargets = {AnnotationTarget.CLASS, AnnotationTarget.PROPERTY, AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR})
+@kotlin.SinceKotlin(version = "1.8")
+public final annotation class JsNotExport : kotlin.Annotation {
+    public constructor JsNotExport()
+}
+
 @kotlin.annotation.Retention(value = AnnotationRetention.BINARY)
 @kotlin.annotation.Target(allowedTargets = {AnnotationTarget.CLASS, AnnotationTarget.PROPERTY, AnnotationTarget.FUNCTION, AnnotationTarget.FILE})
 public final annotation class JsModule : kotlin.Annotation {

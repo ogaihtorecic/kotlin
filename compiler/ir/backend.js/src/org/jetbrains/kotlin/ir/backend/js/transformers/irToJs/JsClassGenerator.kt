@@ -156,7 +156,7 @@ class JsClassGenerator(private val irClass: IrClass, val context: JsGenerationCo
                 val needsOverride = (overriddenExportedGetter && noOverriddenExportedSetter) ||
                         property.isAllowedFakeOverriddenDeclaration(context.staticContext.backendContext)
 
-                if (irClass.isExported(context.staticContext.backendContext) &&
+                if (property.isExported(context.staticContext.backendContext) &&
                     (overriddenSymbols.isEmpty() || needsOverride) ||
                     hasOverriddenExportedInterfaceProperties ||
                     getterOverridesExternal ||

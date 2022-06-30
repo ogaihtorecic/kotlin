@@ -107,6 +107,11 @@ public interface ErrorsJs {
             DiagnosticFactory1.create(ERROR, DECLARATION_SIGNATURE_OR_DEFAULT);
 
     DiagnosticFactory0<PsiElement> NESTED_JS_EXPORT = DiagnosticFactory0.create(ERROR);
+
+    DiagnosticFactory0<PsiElement> NON_CLASS_MEMBER_USAGE_OF_JS_NOT_EXPORT = DiagnosticFactory0.create(ERROR);
+
+    DiagnosticFactory0<PsiElement> JS_NOT_EXPORT_ON_NOT_EXPORTED_CLASS = DiagnosticFactory0.create(WARNING);
+
     DiagnosticFactory1<KtExpression, String> WRONG_EXPORTED_DECLARATION = DiagnosticFactory1.create(ERROR, DECLARATION_SIGNATURE_OR_DEFAULT);
     DiagnosticFactory2<PsiElement, String, KotlinType> NON_EXPORTABLE_TYPE = DiagnosticFactory2.create(WARNING, DECLARATION_SIGNATURE_OR_DEFAULT);
 

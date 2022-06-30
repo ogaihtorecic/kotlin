@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.*;
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor;
+import org.jetbrains.kotlin.descriptors.annotations.Annotations;
 import org.jetbrains.kotlin.js.PredefinedAnnotation;
 import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.psi.KtAnnotationEntry;
@@ -41,6 +42,7 @@ import static org.jetbrains.kotlin.resolve.descriptorUtil.DescriptorUtilsKt.isEf
 public final class AnnotationsUtils {
     public static final FqName JS_NAME = new FqName("kotlin.js.JsName");
     private static final FqName JS_EXPORT = new FqName("kotlin.js.JsExport");
+    private static final FqName JS_NOT_EXPORT = new FqName("kotlin.js.JsNotExport");
     public static final FqName JS_MODULE_ANNOTATION = new FqName("kotlin.js.JsModule");
     private static final FqName JS_NON_MODULE_ANNOTATION = new FqName("kotlin.js.JsNonModule");
     public static final FqName JS_QUALIFIER_ANNOTATION = new FqName("kotlin.js.JsQualifier");
@@ -122,7 +124,9 @@ public final class AnnotationsUtils {
             if (memberDescriptor.getVisibility() != DescriptorVisibilities.PUBLIC) return false;
         }
 
-        if (hasAnnotationOrInsideAnnotatedClass(descriptor, JS_EXPORT)) return true;
+        FqName firstAnnotationAppear = findFirstAnnotationAppearInDeclarationOrParent(descriptor, JS_EXPORT, JS_NOT_EXPORT);
+
+        if (firstAnnotationAppear != null) return firstAnnotationAppear == JS_EXPORT;
 
         if (CollectionsKt.any(getContainingFileAnnotations(bindingContext, descriptor), annotation ->
                 JS_EXPORT.equals(annotation.getFqName())
@@ -180,6 +184,11 @@ public final class AnnotationsUtils {
         return descriptor.getAnnotations().findAnnotation(JS_EXPORT);
     }
 
+    @Nullable
+    public static AnnotationDescriptor getJsNotExportAnnotation(@NotNull DeclarationDescriptor descriptor) {
+        return descriptor.getAnnotations().findAnnotation(JS_NOT_EXPORT);
+    }
+
     public static boolean isPredefinedObject(@NotNull DeclarationDescriptor descriptor) {
         if (descriptor instanceof MemberDescriptor && ((MemberDescriptor) descriptor).isExpect()) return true;
         if (isEffectivelyExternalMember(descriptor)) return true;
@@ -205,6 +214,17 @@ public final class AnnotationsUtils {
 
         ClassDescriptor containingClass = DescriptorUtils.getContainingClass(descriptor);
         return containingClass != null && hasAnnotationOrInsideAnnotatedClass(containingClass, fqName);
+    }
+
+    @Nullable
+    private static FqName findFirstAnnotationAppearInDeclarationOrParent(@NotNull DeclarationDescriptor descriptor, @NotNull FqName first, @NotNull FqName second) {
+        Annotations annotations = descriptor.getAnnotations();
+
+        if (annotations.hasAnnotation(first)) return first;
+        if (annotations.hasAnnotation(second)) return second;
+
+        ClassDescriptor containingClass = DescriptorUtils.getContainingClass(descriptor);
+        return containingClass == null ? null : findFirstAnnotationAppearInDeclarationOrParent(containingClass, first, second);
     }
 
     public static boolean hasJsNameInAccessors(@NotNull PropertyDescriptor property) {

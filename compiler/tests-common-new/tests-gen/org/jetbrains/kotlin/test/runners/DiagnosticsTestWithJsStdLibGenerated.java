@@ -408,6 +408,18 @@ public class DiagnosticsTestWithJsStdLibGenerated extends AbstractDiagnosticsTes
         }
 
         @Test
+        @TestMetadata("jsNotExportUsage.kt")
+        public void testJsNotExportUsage() throws Exception {
+            runTest("compiler/testData/diagnostics/testsWithJsStdLib/export/jsNotExportUsage.kt");
+        }
+
+        @Test
+        @TestMetadata("jsNotExportUsageTopLevel.kt")
+        public void testJsNotExportUsageTopLevel() throws Exception {
+            runTest("compiler/testData/diagnostics/testsWithJsStdLib/export/jsNotExportUsageTopLevel.kt");
+        }
+
+        @Test
         @TestMetadata("nonConsumableIdentifiers.kt")
         public void testNonConsumableIdentifiers() throws Exception {
             runTest("compiler/testData/diagnostics/testsWithJsStdLib/export/nonConsumableIdentifiers.kt");

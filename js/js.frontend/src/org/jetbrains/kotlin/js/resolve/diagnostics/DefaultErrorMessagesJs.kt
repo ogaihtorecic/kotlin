@@ -103,6 +103,8 @@ private val DIAGNOSTIC_FACTORY_TO_RENDERER by lazy {
             Renderers.DECLARATION_NAME_WITH_KIND)
 
         put(ErrorsJs.NESTED_JS_EXPORT, "@JsExport is only allowed on files and top-level declarations")
+        put(ErrorsJs.NON_CLASS_MEMBER_USAGE_OF_JS_NOT_EXPORT, "@JsNotExport is only allowed on class/object/enum member declarations")
+        put(ErrorsJs.JS_NOT_EXPORT_ON_NOT_EXPORTED_CLASS, "Unnecessary @JsNotExport usage, because the declaration is already not exported")
         put(ErrorsJs.WRONG_EXPORTED_DECLARATION, "Declaration of such kind ({0}) can''t be exported to JS", STRING)
         put(ErrorsJs.NON_EXPORTABLE_TYPE, "Exported declaration uses non-exportable {0} type: {1}", STRING, RENDER_TYPE)
 
