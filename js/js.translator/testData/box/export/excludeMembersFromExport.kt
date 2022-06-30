@@ -31,10 +31,9 @@ class Bar(val value: String) {
     }
 }
 
-// MODULE: main(lib)
 // FILE: main.js
 function box() {
-    var Bar = kotlin_lib.Bar;
+    var Bar = this.lib.Bar;
     var bar = new Bar("TEST");
 
     if (bar.value !== "TEST") return "Error: exported property was not exported"
@@ -46,7 +45,7 @@ function box() {
     if (typeof Bar.Nested !== "function") return "Error: exported nested class was not exported"
     if (typeof Bar.ExcludedNested === "function") return "Error: not exported nested class was exported"
 
-    if (typeof Bar.Companion.bar() !== "BAZ") return "Error: exported companion function was not exported"
+    if (Bar.Companion.baz() !== "BAZ") return "Error: exported companion function was not exported"
     if (typeof Bar.Companion.excludedFun === "function") return "Error: not exported companion function was exported"
 
     return "OK"
