@@ -56,7 +56,7 @@ class TransitiveExportCollector(val context: JsIrBackendContext) {
             owner.isExported(context) -> setOf(getTypeAppliedToRightTypeArguments(newTypeSubstitutionMap) as IrType)
             owner.isJsImplicitExport() -> setOfNotNull(
                 getTypeAppliedToRightTypeArguments(newTypeSubstitutionMap) as IrType,
-                takeIf { owner.isInterface }?.findNearestExportedClass(newTypeSubstitutionMap)
+                takeIf { !owner.isInterface }?.findNearestExportedClass(newTypeSubstitutionMap)
             )
 
             else -> collectSuperTypesTransitiveHierarchy(newTypeSubstitutionMap)
