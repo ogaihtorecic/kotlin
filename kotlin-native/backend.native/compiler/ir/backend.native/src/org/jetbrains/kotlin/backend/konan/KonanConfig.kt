@@ -378,9 +378,6 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
     internal val cachedLibraries: CachedLibraries
         get() = cacheSupport.cachedLibraries
 
-    internal val librariesToCache: Set<KotlinLibrary>
-        get() = cacheSupport.librariesToCache
-
     internal val libraryToCache: PartialCacheInfo?
         get() = cacheSupport.libraryToCache
 
@@ -401,8 +398,8 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
     val infoArgsOnly = configuration.kotlinSourceRoots.isEmpty()
             && configuration[KonanConfigKeys.INCLUDED_LIBRARIES].isNullOrEmpty()
             && configuration[KonanConfigKeys.EXPORTED_LIBRARIES].isNullOrEmpty()
-            && (librariesToCache.isEmpty()
-            || producePerFileCache && outputFiles.mainFile.exists)
+            && (libraryToCache == null
+                || producePerFileCache && outputFiles.mainFile.exists)
 
 }
 

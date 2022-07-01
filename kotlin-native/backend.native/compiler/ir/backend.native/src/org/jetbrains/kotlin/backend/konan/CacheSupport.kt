@@ -125,28 +125,16 @@ class CacheSupport(
                     "not found among resolved libraries:\n  " +
                     allLibraries.joinToString("\n  ") { it.libraryFile.absolutePath })
 
-    // TODO: Is multi-library cache being used actually?
-    internal val librariesToCache: Set<KotlinLibrary> = run {
-        val libraryToAddToCachePath = configuration.get(KonanConfigKeys.LIBRARY_TO_ADD_TO_CACHE)
-        if (libraryToAddToCachePath.isNullOrEmpty()) {
-            configuration.get(KonanConfigKeys.LIBRARIES_TO_CACHE)!!
-                    .map { getLibrary(File(it)) }
-                    .toSet()
-                    .also { if (!produce.isCache) check(it.isEmpty()) }
-        } else {
-            val libraryToAddToCacheFile = File(libraryToAddToCachePath)
-            val libraryToAddToCache = getLibrary(libraryToAddToCacheFile)
-            val libraryCache = cachedLibraries.getLibraryCache(libraryToAddToCache)
-            if (libraryCache == null || libraryCache.granularity == CachedLibraries.Granularity.FILE)
-                setOf(libraryToAddToCache)
-            else
-                emptySet()
+    internal val libraryToCache = configuration.get(KonanConfigKeys.LIBRARY_TO_ADD_TO_CACHE)?.let {
+        val libraryToAddToCacheFile = File(it)
+        val libraryToAddToCache = getLibrary(libraryToAddToCacheFile)
+        val libraryCache = cachedLibraries.getLibraryCache(libraryToAddToCache)
+        if (libraryCache != null && libraryCache.granularity == CachedLibraries.Granularity.MODULE)
+            null
+        else {
+            val fileToCache = configuration.get(KonanConfigKeys.FILE_TO_CACHE)
+            PartialCacheInfo(libraryToAddToCache, if (fileToCache == null) CacheDeserializationStrategy.WholeModule else CacheDeserializationStrategy.SingleFile(fileToCache))
         }
-    }
-
-    internal val libraryToCache = librariesToCache.singleOrNull()?.let {
-        val fileToCache = configuration.get(KonanConfigKeys.FILE_TO_CACHE)
-        PartialCacheInfo(it, if (fileToCache == null) CacheDeserializationStrategy.WholeModule else CacheDeserializationStrategy.SingleFile(fileToCache))
     }
 
     internal val preLinkCaches: Boolean =
@@ -161,9 +149,9 @@ class CacheSupport(
         resolvedLibraries.getFullList { libraries ->
             libraries.map { library ->
                 val cache = cachedLibraries.getLibraryCache(library.library)
-                if (cache != null || library.library in librariesToCache) {
+                if (cache != null || library.library == libraryToCache?.klib) {
                     library.resolvedDependencies.forEach {
-                        if (!cachedLibraries.isLibraryCached(it.library) && it.library !in librariesToCache) {
+                        if (!cachedLibraries.isLibraryCached(it.library) && it.library != libraryToCache?.klib) {
                             val description = if (cache != null) {
                                 "cached (in ${cache.path})"
                             } else {
@@ -182,7 +170,7 @@ class CacheSupport(
         }
 
         // Ensure not making cache for libraries that are already cached:
-        librariesToCache.forEach {
+        libraryToCache?.klib?.let {
             val cache = cachedLibraries.getLibraryCache(it)
             if (cache != null && cache.granularity == CachedLibraries.Granularity.MODULE) {
                 configuration.reportCompilationError("can't cache library '${it.libraryName}' " +
@@ -190,7 +178,7 @@ class CacheSupport(
             }
         }
 
-        if ((librariesToCache.isNotEmpty() || cachedLibraries.hasDynamicCaches || cachedLibraries.hasStaticCaches)
+        if ((libraryToCache != null || cachedLibraries.hasDynamicCaches || cachedLibraries.hasStaticCaches)
                 && configuration.getBoolean(KonanConfigKeys.OPTIMIZATION)) {
             configuration.reportCompilationError("Cache cannot be used in optimized compilation")
         }

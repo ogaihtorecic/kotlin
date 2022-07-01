@@ -62,7 +62,7 @@ internal class CacheStorage(val context: Context) {
                 .filter {
                     require(it is KonanLibrary)
                     context.llvmImports.bitcodeIsUsed(it)
-                            && it !in context.config.cacheSupport.librariesToCache // Skip loops.
+                            && it != context.config.cacheSupport.libraryToCache?.klib // Skip loops.
                 }.cast<List<KonanLibrary>>()
         context.config.outputFiles.bitcodeDependenciesFile!!.writeLines(bitcodeDependencies.map { it.uniqueName })
     }
@@ -92,11 +92,8 @@ internal class Linker(val context: Context) {
     fun link(objectFiles: List<ObjectFile>) {
         val nativeDependencies = context.llvm.nativeDependenciesToLink
 
-        val includedBinariesLibraries = if (context.config.produce.isCache) {
-            context.config.librariesToCache
-        } else {
-            nativeDependencies.filterNot { context.config.cachedLibraries.isLibraryCached(it) }
-        }
+        val includedBinariesLibraries = context.config.libraryToCache?.let { listOf(it.klib) }
+                ?: nativeDependencies.filterNot { context.config.cachedLibraries.isLibraryCached(it) }
         val includedBinaries = includedBinariesLibraries.map { (it as? KonanLibrary)?.includedPaths.orEmpty() }.flatten()
 
         val libraryProvidedLinkerFlags = context.llvm.allNativeDependencies.map { it.linkerOpts }.flatten()

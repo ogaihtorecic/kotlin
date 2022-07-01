@@ -206,14 +206,6 @@ class K2NativeCompilerArguments : CommonCompilerArguments() {
 
 
     @Argument(
-        value = MAKE_CACHE,
-        valueDescription = "<path>",
-        description = "Path of the library to be compiled to cache",
-        delimiter = ""
-    )
-    var librariesToCache: Array<String>? = null
-
-    @Argument(
         value = ADD_CACHE,
         valueDescription = "<path>",
         description = "Path to the library to be added to cache",
@@ -423,7 +415,6 @@ class K2NativeCompilerArguments : CommonCompilerArguments() {
         const val STATIC_FRAMEWORK_FLAG = "-Xstatic-framework"
         const val INCLUDE_ARG = "-Xinclude"
         const val CACHED_LIBRARY = "-Xcached-library"
-        const val MAKE_CACHE = "-Xmake-cache"
         const val ADD_CACHE = "-Xadd-cache"
         const val SHORT_MODULE_NAME_ARG = "-Xshort-module-name"
     }

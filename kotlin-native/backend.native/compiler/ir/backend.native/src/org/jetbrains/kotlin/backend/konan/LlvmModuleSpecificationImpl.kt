@@ -41,9 +41,9 @@ internal class DefaultLlvmModuleSpecification(cachedLibraries: CachedLibraries)
 
 internal class CacheLlvmModuleSpecification(
         cachedLibraries: CachedLibraries,
-        private val librariesToCache: Set<KotlinLibrary>
+        private val libraryToCache: KotlinLibrary
 ) : LlvmModuleSpecificationBase(cachedLibraries) {
     override val isFinal = false
 
-    override fun containsLibrary(library: KotlinLibrary): Boolean = library in librariesToCache
+    override fun containsLibrary(library: KotlinLibrary): Boolean = library == libraryToCache
 }
