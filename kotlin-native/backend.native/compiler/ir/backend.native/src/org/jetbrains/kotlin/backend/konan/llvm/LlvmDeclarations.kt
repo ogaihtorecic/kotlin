@@ -176,7 +176,7 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
             declaration.computeTypeInfoSymbolName()
         } else {
             if (!context.config.producePerFileCache)
-                "ktype:$internalName"
+                "${MangleConstant.CLASS_PREFIX}:$internalName"
             else {
                 val containerName = (context.config.libraryToCache!!.strategy as CacheDeserializationStrategy.SingleFile).filePath
                 declaration.computePrivateTypeInfoSymbolName(containerName)
