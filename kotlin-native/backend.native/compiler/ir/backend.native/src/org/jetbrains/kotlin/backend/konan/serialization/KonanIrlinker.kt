@@ -381,6 +381,22 @@ internal class KonanIrLinker(
                 ?: error("Unknown external package fragment: ${packageFragment.packageFragmentDescriptor}")
     }
 
+    private tailrec fun IdSignature.fileSignature(): IdSignature.FileSignature? = when (this) {
+        is IdSignature.FileSignature -> this
+        is IdSignature.CompositeSignature -> this.container.fileSignature()
+        else -> null
+    }
+
+    fun getExternalDeclarationFileName(declaration: IrDeclaration) = with(declaration) {
+        val externalPackageFragment = getPackageFragment() as? IrExternalPackageFragment
+                ?: error("Expected an external package fragment for ${render()}")
+        val moduleDescriptor = externalPackageFragment.packageFragmentDescriptor.containingDeclaration
+        val moduleDeserializer = moduleDeserializers[moduleDescriptor]
+                ?: error("No module deserializer for $moduleDescriptor")
+        val idSig = moduleDeserializer.descriptorSignatures[descriptor] ?: error("No signature for $descriptor")
+        idSig.topLevelSignature().fileSignature()?.fileName ?: error("No file for $idSig")
+    }
+
     private val IrClass.firstNonClassParent: IrDeclarationParent
         get() {
             var parent = parent
