@@ -299,6 +299,9 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 sourceModule.getModuleDescriptor(it)
             }
 
+            val metadataSerializer =
+                KlibMetadataIncrementalSerializer(configuration, sourceModule.project, sourceModule.jsFrontEndResult.hasErrors)
+
             generateKLib(
                 sourceModule,
                 outputKlibPath = outputFile.path,
@@ -307,7 +310,9 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 icData = icData,
                 expectDescriptorToSymbol = expectDescriptorToSymbol,
                 moduleFragment = moduleFragment
-            )
+            ) { file ->
+                metadataSerializer.serializeScope(file, sourceModule.jsFrontEndResult.bindingContext, moduleFragment.descriptor)
+            }
         }
 
         if (arguments.irProduceJs) {
