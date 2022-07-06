@@ -5,6 +5,8 @@
 
 package org.jetbrains.kotlin.test.frontend.fir
 
+import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.fir.backend.Fir2IrExtensions
 import org.jetbrains.kotlin.fir.convertToJsIr
@@ -43,6 +45,9 @@ class Fir2IrJsResultsConverter(
 
         val icData = configuration.incrementalDataProvider?.getSerializedData(sourceFiles) ?: emptyList()
         val expectDescriptorToSymbol = mutableMapOf<DeclarationDescriptor, IrSymbol>()
+        val metadataVersion =
+            configuration.get(CommonConfigurationKeys.METADATA_VERSION)
+                ?: GenerationState.LANGUAGE_TO_METADATA_VERSION.getValue(module.languageVersionSettings.languageVersion)
 
         return IrBackendInput.JsIrBackendInput(
             irModuleFragment,
@@ -52,7 +57,7 @@ class Fir2IrJsResultsConverter(
             hasErrors = false // TODO: implement error check
         ) { file ->
             val firFile = firFilesBySourceFile[file] ?: error("cannot find FIR file by source file ${file.name} (${file.path})")
-            serializeSingleFirFile(firFile, components.session, components.scopeSession, configuration)
+            serializeSingleFirFile(firFile, components.session, components.scopeSession, metadataVersion)
         }
     }
 }
