@@ -361,7 +361,7 @@ object FirSessionFactory {
         analyzerServices: PlatformDependentAnalyzerServices
     ): FirModuleData {
         return DependencyListForCliModule.createDependencyModuleData(
-            Name.special("<builtins of ${parentModuleName.identifier}"),
+            Name.special("<builtins of ${parentModuleName.asString()}"),
             platform,
             analyzerServices,
         )

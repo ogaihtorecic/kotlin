@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.fir.backend
 import org.jetbrains.kotlin.KtPsiSourceFileLinesMapping
 import org.jetbrains.kotlin.KtSourceFileLinesMappingFromLineStartOffsets
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -410,7 +411,7 @@ class Fir2IrConverter(
             visibilityConverter: Fir2IrVisibilityConverter,
             specialSymbolProvider: Fir2IrSpecialSymbolProvider,
             irGenerationExtensions: Collection<IrGenerationExtension>,
-            generateSignatures: Boolean
+            builtIns: KotlinBuiltIns
         ): Fir2IrResult {
             if (!generateSignatures) {
                 return createModuleFragmentWithoutSignatures(
@@ -426,7 +427,7 @@ class Fir2IrConverter(
                 session, scopeSession, firFiles, languageVersionSettings,
                 fir2IrExtensions, irMangler, irFactory, visibilityConverter,
                 specialSymbolProvider, irGenerationExtensions, signatureComposer,
-                symbolTable, generateSignatures = true
+                symbolTable, generateSignatures = true, builtIns = builtIns
             )
         }
 
@@ -441,7 +442,8 @@ class Fir2IrConverter(
             irFactory: IrFactory,
             visibilityConverter: Fir2IrVisibilityConverter,
             specialSymbolProvider: Fir2IrSpecialSymbolProvider,
-            irGenerationExtensions: Collection<IrGenerationExtension>
+            irGenerationExtensions: Collection<IrGenerationExtension>,
+            builtIns: KotlinBuiltIns
         ): Fir2IrResult {
             val signatureComposer = FirBasedSignatureComposer(mangler)
             val signaturer = DescriptorSignatureComposerStub()
@@ -450,7 +452,7 @@ class Fir2IrConverter(
                 session, scopeSession, firFiles, languageVersionSettings,
                 fir2IrExtensions, irMangler, irFactory, visibilityConverter,
                 specialSymbolProvider, irGenerationExtensions, signatureComposer,
-                symbolTable, generateSignatures = false
+                symbolTable, generateSignatures = false, builtIns = builtIns
             )
         }
 
@@ -467,9 +469,10 @@ class Fir2IrConverter(
             irGenerationExtensions: Collection<IrGenerationExtension>,
             signatureComposer: FirBasedSignatureComposer,
             symbolTable: SymbolTable,
-            generateSignatures: Boolean
+            generateSignatures: Boolean,
+            builtIns: KotlinBuiltIns
         ): Fir2IrResult {
-            val moduleDescriptor = FirModuleDescriptor(session)
+            val moduleDescriptor = FirModuleDescriptor(session, builtIns)
             val components = Fir2IrComponentsStorage(
                 session, scopeSession, symbolTable, irFactory, signatureComposer, fir2IrExtensions, generateSignatures
             )
