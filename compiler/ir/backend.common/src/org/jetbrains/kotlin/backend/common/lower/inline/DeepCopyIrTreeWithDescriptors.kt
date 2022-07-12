@@ -23,8 +23,7 @@ import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
 internal class DeepCopyIrTreeWithSymbolsForInliner(
     val typeArguments: Map<IrTypeParameterSymbol, IrType?>?,
-    val parent: IrDeclarationParent?,
-    val symbolRenamer: SymbolRenamer
+    val parent: IrDeclarationParent?
 ) {
 
     fun copy(irElement: IrElement): IrElement {
@@ -137,7 +136,7 @@ internal class DeepCopyIrTreeWithSymbolsForInliner(
 
     private val symbolRemapper = SymbolRemapperImpl(NullDescriptorsRemapper)
     private val typeRemapper = InlinerTypeRemapper(symbolRemapper, typeArguments)
-    private val copier = object : DeepCopyIrTreeWithSymbols(symbolRemapper, typeRemapper, symbolRenamer) {
+    private val copier = object : DeepCopyIrTreeWithSymbols(symbolRemapper, typeRemapper) {
         private fun IrType.remapTypeAndErase() = typeRemapper.remapTypeAndOptionallyErase(this, erase = true)
 
         override fun visitTypeOperator(expression: IrTypeOperatorCall) =

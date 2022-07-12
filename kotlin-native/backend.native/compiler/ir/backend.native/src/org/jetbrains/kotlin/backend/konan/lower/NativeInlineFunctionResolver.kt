@@ -18,20 +18,6 @@ import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.name.Name
 
-internal class NativeInlineSymbolRenamerFactory : InlineSymbolRenamerFactory {
-    private var classIndex = 0
-
-    override fun createSymbolRenamer(topCallee: IrFunction): SymbolRenamer {
-        return object : SymbolRenamer {
-            private val map = mutableMapOf<IrClassSymbol, Name>()
-
-            override fun getClassName(symbol: IrClassSymbol) = map.getOrPut(symbol) {
-                Name.identifier("${topCallee.fqNameForIrSerialization}_${symbol.owner.name.asString()}_${classIndex++}")
-            }
-        }
-    }
-}
-
 // TODO: This is a bit hacky. Think about adopting persistent IR ideas.
 internal class NativeInlineFunctionResolver(override val context: Context) : DefaultInlineFunctionResolver(context) {
     override fun getFunctionDeclaration(symbol: IrFunctionSymbol): IrFunction {
