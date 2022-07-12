@@ -426,29 +426,35 @@ internal val exportInternalAbiPhase = makeKonanModuleOpPhase(
                         }
                         context.internalAbi.declare(function, declaration.module)
                     }
+                }
 
-                    declaration.properties
-                            .filter { it.isLateinit && !it.isFakeOverride && !DescriptorVisibilities.isPrivate(it.visibility) }
-                            .forEach { property ->
-                                val backingField = property.backingField ?: error("Lateinit property ${property.render()} should have a backing field")
-                                val function = context.irFactory.buildFun {
-                                    name = InternalAbi.getLateinitPropertyFieldAccessorName(property)
-                                    origin = InternalAbi.INTERNAL_ABI_ORIGIN
-                                    returnType = backingField.type
-                                }
-                                function.addValueParameter {
-                                    name = Name.identifier("owner")
-                                    origin = InternalAbi.INTERNAL_ABI_ORIGIN
-                                    type = declaration.defaultType
-                                }
+                override fun visitProperty(declaration: IrProperty) {
+                    declaration.acceptChildrenVoid(this)
 
-                                context.createIrBuilder(function.symbol).apply {
-                                    function.body = irBlockBody {
-                                        +irReturn(irGetField(irGet(function.valueParameters[0]), backingField))
-                                    }
-                                }
-                                context.internalAbi.declare(function, declaration.module)
-                            }
+                    if (!declaration.isLateinit || declaration.isFakeOverride
+                            || DescriptorVisibilities.isPrivate(declaration.visibility) || declaration.isLocal)
+                        return
+
+                    val backingField = declaration.backingField ?: error("Lateinit property ${declaration.render()} should have a backing field")
+                    val function = context.irFactory.buildFun {
+                        name = InternalAbi.getLateinitPropertyFieldAccessorName(declaration)
+                        origin = InternalAbi.INTERNAL_ABI_ORIGIN
+                        returnType = backingField.type
+                    }
+                    val ownerClass = declaration.parentClassOrNull
+                    if (ownerClass != null)
+                        function.addValueParameter {
+                            name = Name.identifier("owner")
+                            origin = InternalAbi.INTERNAL_ABI_ORIGIN
+                            type = ownerClass.defaultType
+                        }
+
+                    context.createIrBuilder(function.symbol).apply {
+                        function.body = irBlockBody {
+                            +irReturn(irGetField(ownerClass?.let { irGet(function.valueParameters[0]) }, backingField))
+                        }
+                    }
+                    context.internalAbi.declare(function, declaration.module)
                 }
             }
             module.acceptChildrenVoid(visitor)
@@ -494,13 +500,13 @@ internal val useInternalAbiPhase = makeKonanModuleOpPhase(
                     expression.transformChildrenVoid(this)
 
                     val field = expression.symbol.owner
-                    val irClass = field.parentClassOrNull ?: return expression
+                    val irClass = field.parentClassOrNull
                     val property = field.correspondingPropertySymbol?.owner
 
                     return when {
-                        context.llvmModuleSpecification.containsDeclaration(irClass) -> expression
+                        context.llvmModuleSpecification.containsDeclaration(field) -> expression
 
-                        irClass.isInner && context.specialDeclarationsFactory.getOuterThisField(irClass) == field -> {
+                        irClass?.isInner == true && context.specialDeclarationsFactory.getOuterThisField(irClass) == field -> {
                             val accessor = outerThisAccessors.getOrPut(irClass) {
                                 context.irFactory.buildFun {
                                     name = InternalAbi.getInnerClassOuterThisAccessorName(irClass)
@@ -534,13 +540,14 @@ internal val useInternalAbiPhase = makeKonanModuleOpPhase(
                                     origin = InternalAbi.INTERNAL_ABI_ORIGIN
                                     isExternal = true
                                 }.also { function ->
-                                    context.internalAbi.reference(function, irClass.module)
+                                    context.internalAbi.reference(function, property.module)
 
-                                    function.addValueParameter {
-                                        name = Name.identifier("owner")
-                                        origin = InternalAbi.INTERNAL_ABI_ORIGIN
-                                        type = irClass.defaultType
-                                    }
+                                    if (irClass != null)
+                                        function.addValueParameter {
+                                            name = Name.identifier("owner")
+                                            origin = InternalAbi.INTERNAL_ABI_ORIGIN
+                                            type = irClass.defaultType
+                                        }
                                 }
                             }
                             return IrCallImpl(
@@ -548,7 +555,8 @@ internal val useInternalAbiPhase = makeKonanModuleOpPhase(
                                     expression.type, accessor.symbol,
                                     accessor.typeParameters.size, accessor.valueParameters.size
                             ).apply {
-                                putValueArgument(0, expression.receiver)
+                                if (irClass != null)
+                                    putValueArgument(0, expression.receiver)
                             }
                         }
 
