@@ -121,7 +121,7 @@ class FirAnalyzerFacade(
             Fir2IrJvmSpecialAnnotationSymbolProvider(),
             irGeneratorExtensions,
             generateSignatures,
-            builtIns = DefaultBuiltIns.Instance // TODO: consider passing externally
+            kotlinBuiltIns = DefaultBuiltIns.Instance // TODO: consider passing externally
         )
     }
 }

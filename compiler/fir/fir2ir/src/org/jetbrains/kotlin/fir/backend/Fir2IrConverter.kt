@@ -417,7 +417,8 @@ class Fir2IrConverter(
                 return createModuleFragmentWithoutSignatures(
                     session, scopeSession, firFiles, languageVersionSettings,
                     fir2IrExtensions, mangler, irMangler, irFactory,
-                    visibilityConverter, specialSymbolProvider, irGenerationExtensions
+                    visibilityConverter, specialSymbolProvider, irGenerationExtensions,
+                    builtins
                 )
             }
             val signatureComposer = FirBasedSignatureComposer(mangler)

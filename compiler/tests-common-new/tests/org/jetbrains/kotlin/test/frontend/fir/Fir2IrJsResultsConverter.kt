@@ -117,7 +117,7 @@ fun AbstractFirAnalyzerFacade.convertToJsIr(
         Fir2IrJvmSpecialAnnotationSymbolProvider(), // TODO: replace with appropriate (probably empty) implementation
         irGeneratorExtensions,
         generateSignatures = false,
-        builtIns = builtIns ?: DefaultBuiltIns.Instance // TODO: consider passing externally
+        kotlinBuiltIns = builtIns ?: DefaultBuiltIns.Instance // TODO: consider passing externally
     ).also {
         it.irModuleFragment.descriptor.safeAs<FirModuleDescriptor>()?.allDependencyModules = dependencies
     }
