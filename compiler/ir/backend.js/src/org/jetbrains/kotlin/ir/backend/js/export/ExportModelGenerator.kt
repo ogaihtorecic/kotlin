@@ -215,7 +215,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun exportDeclarationImplicitly(klass: IrClass, superTypes: Iterable<IrType>): ExportedDeclaration {
-        val typeParameters = klass.typeParameters.map { it.name.identifier }
+        val typeParameters = klass.typeParameters.map(::exportTypeParameter)
         val superInterfaces = superTypes
             .filter { (it.classifierOrFail.owner as? IrDeclaration)?.isExportedImplicitlyOrExplicitly(context) ?: false }
             .map { exportType(it) }
