@@ -311,12 +311,12 @@ object FirSessionFactory {
         }
 
         val otherProviders = listOf(
-            FirBuiltinSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
             FirCloneableSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
-            FirDependenciesSymbolProviderImpl(this)
+            FirDependenciesSymbolProviderImpl(this),
+            FirBuiltinSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
         )
 
-        val symbolProvider = FirCompositeSymbolProvider(this, otherProviders + klibProviders)
+        val symbolProvider = FirCompositeSymbolProvider(this, klibProviders + otherProviders)
 
         register(FirSymbolProvider::class, symbolProvider)
         register(FirProvider::class, FirLibrarySessionProvider(symbolProvider))
