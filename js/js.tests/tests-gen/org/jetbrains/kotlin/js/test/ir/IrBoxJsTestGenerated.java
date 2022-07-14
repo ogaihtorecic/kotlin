@@ -7817,6 +7817,12 @@ public class IrBoxJsTestGenerated extends AbstractIrBoxJsTest {
         }
 
         @Test
+        @TestMetadata("overloadClassGenericExtension.kt")
+        public void testOverloadClassGenericExtension() throws Exception {
+            runTest("js/js.translator/testData/box/nameClashes/overloadClassGenericExtension.kt");
+        }
+
+        @Test
         @TestMetadata("overloadExtension.kt")
         public void testOverloadExtension() throws Exception {
             runTest("js/js.translator/testData/box/nameClashes/overloadExtension.kt");
