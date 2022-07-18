@@ -21,6 +21,8 @@ enum class CandidateApplicability {
     UNSTABLE_SMARTCAST, // unstable smart cast
     CONVENTION_ERROR, // missing infix, operator etc
 
+    RESOLVED_DYNAMIC,
+
     // Below has shouldStopResolve = true
     DSL_SCOPE_VIOLATION, // Skip other levels for DSL_SCOPE_VIOLATION because if the candidate is marked DSL_SCOPE_VIOLATION with an inner receiver, one should not keep going to outer receivers.
 
@@ -33,7 +35,7 @@ enum class CandidateApplicability {
 }
 
 val CandidateApplicability.isSuccess: Boolean
-    get() = this >= CandidateApplicability.RESOLVED_LOW_PRIORITY
+    get() = this >= CandidateApplicability.RESOLVED_LOW_PRIORITY || this == CandidateApplicability.RESOLVED_DYNAMIC
 
 val CandidateApplicability.shouldStopResolve: Boolean
     get() = this >= CandidateApplicability.DSL_SCOPE_VIOLATION

@@ -95,7 +95,7 @@ class UnsafeCall(val actualType: ConeKotlinType) : ResolutionDiagnostic(UNSAFE_C
 
 object LowerPriorityToPreserveCompatibilityDiagnostic : ResolutionDiagnostic(RESOLVED_NEED_PRESERVE_COMPATIBILITY)
 
-object LowerPriorityForDynamic : ResolutionDiagnostic(RESOLVED_LOW_PRIORITY)
+object LowerPriorityForDynamic : ResolutionDiagnostic(RESOLVED_DYNAMIC)
 
 object CandidateChosenUsingOverloadResolutionByLambdaAnnotation : ResolutionDiagnostic(RESOLVED)
 
