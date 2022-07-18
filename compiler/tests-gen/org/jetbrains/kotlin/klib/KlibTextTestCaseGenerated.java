@@ -1932,6 +1932,11 @@ public class KlibTextTestCaseGenerated extends AbstractKlibTextTestCase {
             runTest("compiler/testData/ir/irText/firProblems/recursiveCapturedTypeInPropertyReference.kt");
         }
 
+        @TestMetadata("reflectFindAnnotationOnDefaultMethodParameter.kt")
+        public void testReflectFindAnnotationOnDefaultMethodParameter() throws Exception {
+            runTest("compiler/testData/ir/irText/firProblems/reflectFindAnnotationOnDefaultMethodParameter.kt");
+        }
+
         @TestMetadata("SafeLetWithReturn.kt")
         public void testSafeLetWithReturn() throws Exception {
             runTest("compiler/testData/ir/irText/firProblems/SafeLetWithReturn.kt");

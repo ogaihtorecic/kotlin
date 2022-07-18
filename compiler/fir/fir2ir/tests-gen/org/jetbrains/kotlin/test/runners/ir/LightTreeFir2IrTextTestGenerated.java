@@ -2633,6 +2633,12 @@ public class LightTreeFir2IrTextTestGenerated extends AbstractLightTreeFir2IrTex
         }
 
         @Test
+        @TestMetadata("reflectFindAnnotationOnDefaultMethodParameter.kt")
+        public void testReflectFindAnnotationOnDefaultMethodParameter() throws Exception {
+            runTest("compiler/testData/ir/irText/firProblems/reflectFindAnnotationOnDefaultMethodParameter.kt");
+        }
+
+        @Test
         @TestMetadata("SafeLetWithReturn.kt")
         public void testSafeLetWithReturn() throws Exception {
             runTest("compiler/testData/ir/irText/firProblems/SafeLetWithReturn.kt");
