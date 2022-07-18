@@ -167,21 +167,33 @@ enum class EC : I3 {
 // Save hierarhy
 
 @JsExport
-interface IA
+interface IA {
+    fun foo(): String
+}
+
+@JsExport
+interface IG<T> {
+    fun process(value: T): Unit
+}
 
 interface IB : IA
 
-interface IC : IB
+interface IC : IB {
+    override fun foo(): String = "IB"
+}
 
 @JsExport
 open class Third<T>: Second()
 
 open class Forth<A>: Third<A>(), IB, IC
 
-open class Fifth<B>: Forth<B>()
+open class Fifth<B>: Forth<B>(), IG<B> {
+    override fun process(value: B) {}
+}
 
 @JsExport
 class Sixth: Fifth<Int>(), IC
+
 @JsExport
 open class First
 
