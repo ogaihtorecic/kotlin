@@ -51,8 +51,6 @@ constructor(
 
     @TaskAction
     fun run() {
-        nodeJs.npmResolutionManager.checkRequiredDependencies(this, services, logger, project.path)
-
         val validationStrategy = validationStrategy.get()
 
         if (validationStrategy == KotlinIrJsGeneratedTSValidationStrategy.IGNORE) return
