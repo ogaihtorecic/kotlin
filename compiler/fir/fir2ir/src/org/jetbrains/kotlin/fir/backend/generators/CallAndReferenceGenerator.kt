@@ -421,14 +421,17 @@ class CallAndReferenceGenerator(
             // into a non-fake member. For example, we can
             // resolve into members of `Any`.
             val convertedExplicitReceiver = if (explicitReceiverExpression?.type is IrDynamicType) {
-                qualifiedAccess.convertWithOffsets { startOffset, endOffset ->
-                    val targetType = (firSymbol?.fir as? FirCallableDeclaration)?.dispatchReceiverType?.toIrType()
-                        ?: error("Couldn't get the proper receiver")
-                    IrTypeOperatorCallImpl(
-                        startOffset, endOffset, targetType,
-                        IrTypeOperator.IMPLICIT_DYNAMIC_CAST,
-                        targetType, explicitReceiverExpression,
-                    )
+                val targetType = (firSymbol?.fir as? FirCallableDeclaration)?.dispatchReceiverType?.toIrType()
+                if (targetType != null) {
+                    qualifiedAccess.convertWithOffsets { startOffset, endOffset ->
+                        IrTypeOperatorCallImpl(
+                            startOffset, endOffset, targetType,
+                            IrTypeOperator.IMPLICIT_DYNAMIC_CAST,
+                            targetType, explicitReceiverExpression,
+                        )
+                    }
+                } else {
+                    explicitReceiverExpression
                 }
             } else {
                 explicitReceiverExpression
