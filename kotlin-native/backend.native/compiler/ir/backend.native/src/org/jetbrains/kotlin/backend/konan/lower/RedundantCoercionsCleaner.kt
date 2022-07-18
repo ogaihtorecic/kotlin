@@ -266,7 +266,9 @@ internal class RedundantCoercionsCleaner(val context: Context) : FileLoweringPas
                 }
 
             is IrConstantPrimitive ->
-                if (expression.value.type.classifierOrNull == coercion.type.classifierOrNull) {
+                if (expression.value.type == coercion.type) {
+                    // In case the initial and final types are equal, then
+                    // the whole sequence of transformations is no-op, and we can remove them all
                     PossiblyFoldedExpression(expression.value, true)
                 } else {
                     // Types are not equal for ex. in kt53100_casts.kt
