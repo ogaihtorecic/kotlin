@@ -24,10 +24,10 @@ import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.report.BuildReportType
 import org.jetbrains.kotlin.gradle.testbase.*
 import org.junit.jupiter.api.DisplayName
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.readText
-import kotlin.io.path.relativeTo
-import kotlin.io.path.writeText
+import java.nio.file.*
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.io.path.*
 
 @ExperimentalPathApi
 @DisplayName("Local build cache")
@@ -79,43 +79,120 @@ class BuildCacheIT : KGPBaseTest() {
 
             val fileHasher = DefaultFileHasher(DefaultStreamHasher())
 
-            build("assemble", forceOutput = true) {
-                // Should store the output into the cache:
-                assertTasksPackedToCache(":compileKotlin")
-            }
+            val taskOutput = projectPath.resolve("build/kotlin/compileKotlin/cacheable")
+            val watchfsThread = FileWatcher(taskOutput)
 
-            fun historyFileHash(): HashCode = fileHasher.hash(
-                projectPath.resolve("build/kotlin/compileKotlin/cacheable/last-build.bin").toFile()
-            )
-            println("XXX: first build history file hash ${historyFileHash()}")
+            try {
+                build("assemble", forceOutput = true) {
+                    // Should store the output into the cache:
+                    assertTasksPackedToCache(":compileKotlin")
+                }
+                watchfsThread.start()
 
-            val sourceFile = kotlinSourcesDir().resolve("helloWorld.kt")
-            val originalSource: String = sourceFile.readText()
-            val modifiedSource: String = originalSource.replace(" and ", " + ")
-            sourceFile.writeText(modifiedSource)
+                fun historyFileHash(): HashCode = fileHasher.hash(
+                    projectPath.resolve("build/kotlin/compileKotlin/cacheable/last-build.bin").toFile()
+                )
+                println("XXX: first build history file hash ${historyFileHash()}")
 
-            build("assemble", forceOutput = true) {
-                assertTasksPackedToCache(":compileKotlin")
-            }
-            println("XXX: second build history file hash ${historyFileHash()}")
+                val sourceFile = kotlinSourcesDir().resolve("helloWorld.kt")
+                val originalSource: String = sourceFile.readText()
+                val modifiedSource: String = originalSource.replace(" and ", " + ")
+                sourceFile.writeText(modifiedSource)
 
-            sourceFile.writeText(originalSource)
+                build("assemble", forceOutput = true) {
+                    assertTasksPackedToCache(":compileKotlin")
+                }
+                println("XXX: second build history file hash ${historyFileHash()}")
 
-            build("assemble", forceOutput = true) {
-                // Should load the output from cache:
-                assertTasksFromCache(":compileKotlin")
-            }
-            println("XXX: third build history file hash ${historyFileHash()}")
+                sourceFile.writeText(originalSource)
 
-            sourceFile.writeText(modifiedSource)
+                build("assemble", forceOutput = true) {
+                    // Should load the output from cache:
+                    assertTasksFromCache(":compileKotlin")
+                }
+                println("XXX: third build history file hash ${historyFileHash()}")
 
-            println("XXX: before 4th build history file hash ${historyFileHash()}")
-            build("assemble", forceOutput = true) {
-                // And should load the output from cache again, without compilation:
-                assertTasksFromCache(":compileKotlin")
+                sourceFile.writeText(modifiedSource)
+
+                println("XXX: before 4th build history file hash ${historyFileHash()}")
+                build("assemble", forceOutput = true) {
+                    // And should load the output from cache again, without compilation:
+                    assertTasksFromCache(":compileKotlin")
+                }
+            } finally {
+                if (!watchfsThread.isStopped) watchfsThread.stopThread()
             }
         }
     }
+
+    class FileWatcher(private val file: Path) : Thread("watch-fs") {
+        private val stop: AtomicBoolean = AtomicBoolean(false)
+
+        val isStopped: Boolean
+            get() = stop.get()
+
+        fun stopThread() {
+            stop.set(true)
+        }
+
+        fun doOnChange(file: Path) {
+            println("KKK: ${System.currentTimeMillis()} ms - file was changed: ${file.pathString}")
+        }
+
+        fun doOnCreate(file: Path) {
+            println("KKK: ${System.currentTimeMillis()} ms file was created: ${file.pathString}")
+        }
+
+        fun doOnDelete(file: Path) {
+            println("KKK: ${System.currentTimeMillis()} ms file was deleted: ${file.pathString}")
+        }
+
+        override fun run() {
+            try {
+                FileSystems.getDefault().newWatchService().use { watcher ->
+                    val path: Path = file
+                    path.register(
+                        watcher,
+                        StandardWatchEventKinds.ENTRY_MODIFY,
+                        StandardWatchEventKinds.ENTRY_CREATE,
+                        StandardWatchEventKinds.ENTRY_DELETE
+                    )
+                    var key: WatchKey?
+                    while (!isStopped) {
+                        key = try {
+                            watcher.poll(25, TimeUnit.MILLISECONDS)
+                        } catch (e: InterruptedException) {
+                            return
+                        }
+                        if (key == null) {
+                            yield()
+                            continue
+                        }
+                        for (event in key.pollEvents()) {
+                            @Suppress("UNCHECKED_CAST") val ev: WatchEvent<Path> = event as WatchEvent<Path>
+                            when (ev.kind()) {
+                                StandardWatchEventKinds.OVERFLOW -> {
+                                    yield()
+                                    continue
+                                }
+                                StandardWatchEventKinds.ENTRY_MODIFY -> doOnChange(ev.context())
+                                StandardWatchEventKinds.ENTRY_CREATE -> doOnCreate(ev.context())
+                                StandardWatchEventKinds.ENTRY_DELETE -> doOnDelete(ev.context())
+                            }
+                            val valid = key.reset()
+                            if (!valid) {
+                                break
+                            }
+                        }
+                        yield()
+                    }
+                }
+            } catch (e: Throwable) {
+                // Log or rethrow the error
+            }
+        }
+    }
+
 
     @DisplayName("Debug log level should not break build cache")
     @GradleTest
