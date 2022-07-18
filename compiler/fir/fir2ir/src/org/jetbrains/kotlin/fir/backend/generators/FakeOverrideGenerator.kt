@@ -115,7 +115,19 @@ class FakeOverrideGenerator(
             createFakeOverriddenIfNeeded(
                 firClass, irClass, isLocal, functionSymbol,
                 declarationStorage::getCachedIrFunction,
-                declarationStorage::createIrFunction,
+                createIrDeclaration = { function, irParent, thisReceiverOwner, predefinedOrigin, isLocal ->
+                    declarationStorage.createIrFunction(
+                        function,
+                        irParent,
+                        thisReceiverOwner,
+                        predefinedOrigin,
+                        isLocal
+                    ).apply {
+                        valueParameters.zip(function.valueParameters).forEach { (irParameter, firParameter) ->
+                            annotationGenerator.generate(irParameter, firParameter, isInConstructor = false)
+                        }
+                    }
+                },
                 createFakeOverrideSymbol = { firFunction, callableSymbol ->
                     val symbol = FirFakeOverrideGenerator.createSymbolForSubstitutionOverride(callableSymbol, firClass.symbol.classId)
                     FirFakeOverrideGenerator.createSubstitutionOverrideFunction(
