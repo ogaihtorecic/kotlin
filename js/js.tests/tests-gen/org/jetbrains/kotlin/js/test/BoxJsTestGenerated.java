@@ -7351,6 +7351,12 @@ public class BoxJsTestGenerated extends AbstractBoxJsTest {
         }
 
         @Test
+        @TestMetadata("overloadClassGenericExtensionInGenericScope.kt")
+        public void testOverloadClassGenericExtensionInGenericScope() throws Exception {
+            runTest("js/js.translator/testData/box/nameClashes/overloadClassGenericExtensionInGenericScope.kt");
+        }
+
+        @Test
         @TestMetadata("overloadExtension.kt")
         public void testOverloadExtension() throws Exception {
             runTest("js/js.translator/testData/box/nameClashes/overloadExtension.kt");
