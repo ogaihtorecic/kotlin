@@ -158,20 +158,20 @@ val unzipJsShell by task<Copy> {
 
 val testDataDir = project(":js:js.translator").projectDir.resolve("testData")
 val typescriptTestsDir = testDataDir.resolve("typescript-export")
-val exportFileGeneratedDir = "exportFileGenerated"
+val exportFileDirPostfix = "-in-exported-file"
 
 val generateJsExportOnFileTestFilesForTS by task<Copy> {
     from(typescriptTestsDir) {
         include("**/*.kt")
         include("**/*.ts")
         include("**/tsconfig.json")
-        exclude("selectiveExport/*")
-        exclude("implicitExport/*")
+        exclude("selective-export/*")
+        exclude("implicit-export/*")
         exclude("inheritance/*")
-        exclude("*InExportedFile")
+        exclude("*$exportFileDirPostfix")
 
         eachFile {
-            path = "${relativePath.parent}InExportedFile/$name"
+            path = "${relativePath.parent}$exportFileDirPostfix/$name"
 
             var isFirstLine = true
             filter {
