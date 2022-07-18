@@ -17,6 +17,9 @@
 package org.jetbrains.kotlin.gradle
 
 import org.gradle.api.logging.LogLevel
+import org.gradle.internal.hash.DefaultFileHasher
+import org.gradle.internal.hash.DefaultStreamHasher
+import org.gradle.internal.hash.HashCode
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.report.BuildReportType
 import org.jetbrains.kotlin.gradle.testbase.*
@@ -74,30 +77,40 @@ class BuildCacheIT : KGPBaseTest() {
         project("simpleProject", gradleVersion) {
             enableLocalBuildCache(localBuildCacheDir)
 
-            build("assemble") {
+            val fileHasher = DefaultFileHasher(DefaultStreamHasher())
+
+            build("assemble", forceOutput = true) {
                 // Should store the output into the cache:
                 assertTasksPackedToCache(":compileKotlin")
             }
+
+            fun historyFileHash(): HashCode = fileHasher.hash(
+                projectPath.resolve("build/kotlin/compileKotlin/cacheable/last-build.bin").toFile()
+            )
+            println("XXX: first build history file hash ${historyFileHash()}")
 
             val sourceFile = kotlinSourcesDir().resolve("helloWorld.kt")
             val originalSource: String = sourceFile.readText()
             val modifiedSource: String = originalSource.replace(" and ", " + ")
             sourceFile.writeText(modifiedSource)
 
-            build("assemble") {
+            build("assemble", forceOutput = true) {
                 assertTasksPackedToCache(":compileKotlin")
             }
+            println("XXX: second build history file hash ${historyFileHash()}")
 
             sourceFile.writeText(originalSource)
 
-            build("assemble") {
+            build("assemble", forceOutput = true) {
                 // Should load the output from cache:
                 assertTasksFromCache(":compileKotlin")
             }
+            println("XXX: third build history file hash ${historyFileHash()}")
 
             sourceFile.writeText(modifiedSource)
 
-            build("assemble") {
+            println("XXX: before 4th build history file hash ${historyFileHash()}")
+            build("assemble", forceOutput = true) {
                 // And should load the output from cache again, without compilation:
                 assertTasksFromCache(":compileKotlin")
             }

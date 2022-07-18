@@ -11,6 +11,8 @@ import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.internal.hash.DefaultFileHasher
+import org.gradle.internal.hash.DefaultStreamHasher
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
@@ -77,6 +79,19 @@ internal class GradleCompilerRunnerWithWorkers(
                 GradleKotlinCompilerWork(
                     parameters.compilerWorkArguments.get()
                 ).run()
+
+                val historyBinFile = parameters
+                    .compilerWorkArguments.get()
+                    .incrementalCompilationEnvironment
+                    ?.workingDir
+                    ?.resolve("last-build.bin")
+                if (historyBinFile != null) {
+                    val fileHasher = DefaultFileHasher(DefaultStreamHasher())
+                    val historyFileHash = fileHasher.hash(historyBinFile)
+                    logger.warn("ZZZ: history bin file after execution hash: $historyFileHash")
+                } else {
+                    logger.warn("ZZZ: history bin file does not exist")
+                }
             } catch (e: GradleException) {
                 // Currently, metrics are not reported as in the worker we are getting new instance of [BuildMetricsReporter]
                 // [BuildDataRecorder] knows nothing about this new instance. Possibly could be fixed in the future by migrating
