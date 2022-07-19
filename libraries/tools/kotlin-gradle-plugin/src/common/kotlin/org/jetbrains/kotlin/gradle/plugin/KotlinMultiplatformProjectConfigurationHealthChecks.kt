@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.gradle.plugin
 
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
@@ -18,6 +19,7 @@ import org.jetbrains.kotlin.gradle.targets.native.internal.CInteropCommonizerDep
 import org.jetbrains.kotlin.gradle.targets.native.internal.from
 import org.jetbrains.kotlin.gradle.targets.native.internal.isAllowCommonizer
 import org.jetbrains.kotlin.gradle.utils.androidPluginIds
+import org.jetbrains.kotlin.gradle.utils.findAppliedAndroidPluginIdOrNull
 import org.jetbrains.kotlin.gradle.utils.runProjectConfigurationHealthCheck
 
 private class KotlinMultiplatformProjectConfigurationException(message: String) : Exception(message)
@@ -44,8 +46,7 @@ internal fun Project.runMissingAndroidTargetProjectConfigurationHealthCheck(
         return@check
     }
 
-    val androidPluginId = androidPluginIds
-        .firstOrNull { androidPluginId -> plugins.findPlugin(androidPluginId) != null } ?: return@check
+    val androidPluginId = findAppliedAndroidPluginIdOrNull() ?: return@check
 
     if (findAndroidTarget() != null) return@check
 
