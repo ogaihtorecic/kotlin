@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import org.gradle.api.provider.Property
 import org.gradle.api.file.DirectoryProperty
+import org.jetbrains.kotlin.gradle.internal.execWithProgress
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJsCompilation
 import org.jetbrains.kotlin.gradle.targets.js.RequiredKotlinJsDependency
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinIrJsGeneratedTSValidationStrategy
@@ -17,7 +18,6 @@ import org.jetbrains.kotlin.gradle.targets.js.npm.RequiresNpmDependencies
 import org.jetbrains.kotlin.gradle.targets.js.npm.npmProject
 import javax.inject.Inject
 
-@CacheableTask
 abstract class TypeScriptValidationTask
 @Inject
 constructor(
@@ -55,13 +55,12 @@ constructor(
 
         if (validationStrategy == KotlinIrJsGeneratedTSValidationStrategy.IGNORE) return
 
-        val tsc = npmProject.require("typescript/bin/tsc")
         val files = generatedDts.map { it.absolutePath }
 
         if (files.isEmpty()) return
 
-        val result = project.exec {
-            it.commandLine = listOf(tsc, "--noEmit") + files
+        val result = services.execWithProgress("typescript") {
+            npmProject.useTool(it, "typescript/bin/tsc", listOf(), listOf("--noEmit"))
         }
 
         if (result.exitValue == 0) return
