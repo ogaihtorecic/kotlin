@@ -107,7 +107,7 @@ fun AbstractFirAnalyzerFacade.convertToJsIr(
     val libraries = resolveJsLibraries(module, testServices, configuration)
     val (dependencies, builtIns) = loadResolvedLibraries(libraries, configuration.languageVersionSettings, testServices)
 
-    return Fir2IrConverter.createModuleFragment(
+    return Fir2IrConverter.createModuleFragmentWithSignaturesIfNeeded(
         session, scopeSession, firFiles + commonFirFiles,
         languageVersionSettings, signaturer,
         fir2IrExtensions,

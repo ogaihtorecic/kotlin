@@ -413,14 +413,14 @@ class Fir2IrConverter(
             specialSymbolProvider: Fir2IrSpecialSymbolProvider,
             irGenerationExtensions: Collection<IrGenerationExtension>,
             generateSignatures: Boolean,
-            builtIns: KotlinBuiltIns
+            kotlinBuiltIns: KotlinBuiltIns
         ): Fir2IrResult {
             if (!generateSignatures) {
                 return createModuleFragmentWithoutSignatures(
                     session, scopeSession, firFiles, languageVersionSettings,
                     fir2IrExtensions, mangler, irMangler, irFactory,
                     visibilityConverter, specialSymbolProvider, irGenerationExtensions,
-                    builtIns
+                    kotlinBuiltIns
                 )
             }
             val signatureComposer = FirBasedSignatureComposer(mangler)
@@ -430,7 +430,7 @@ class Fir2IrConverter(
                 session, scopeSession, firFiles, languageVersionSettings,
                 fir2IrExtensions, irMangler, irFactory, visibilityConverter,
                 specialSymbolProvider, irGenerationExtensions, signatureComposer,
-                symbolTable, generateSignatures = true, kotlinBuiltIns = builtIns
+                symbolTable, generateSignatures = true, kotlinBuiltIns = kotlinBuiltIns
             )
         }
 
@@ -446,7 +446,7 @@ class Fir2IrConverter(
             visibilityConverter: Fir2IrVisibilityConverter,
             specialSymbolProvider: Fir2IrSpecialSymbolProvider,
             irGenerationExtensions: Collection<IrGenerationExtension>,
-            builtIns: KotlinBuiltIns
+            kotlinBuiltIns: KotlinBuiltIns
         ): Fir2IrResult {
             val signatureComposer = FirBasedSignatureComposer(mangler)
             val signaturer = DescriptorSignatureComposerStub()
@@ -455,7 +455,7 @@ class Fir2IrConverter(
                 session, scopeSession, firFiles, languageVersionSettings,
                 fir2IrExtensions, irMangler, irFactory, visibilityConverter,
                 specialSymbolProvider, irGenerationExtensions, signatureComposer,
-                symbolTable, generateSignatures = false, kotlinBuiltIns = builtIns
+                symbolTable, generateSignatures = false, kotlinBuiltIns = kotlinBuiltIns
             )
         }
 

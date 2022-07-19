@@ -282,7 +282,7 @@ class IncrementalFirJvmCompilerRunner(
                 FirJvmKotlinMangler(cycleResult.session), JvmIrMangler, IrFactoryImpl, FirJvmVisibilityConverter,
                 Fir2IrJvmSpecialAnnotationSymbolProvider(),
                 irGenerationExtensions,
-                builtIns = DefaultBuiltIns.Instance // TODO: consider passing externally
+                kotlinBuiltIns = DefaultBuiltIns.Instance // TODO: consider passing externally
             )
 
             performanceManager?.notifyIRTranslationFinished()

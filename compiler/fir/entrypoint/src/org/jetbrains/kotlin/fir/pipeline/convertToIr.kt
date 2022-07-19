@@ -41,6 +41,6 @@ fun FirSession.convertToIr(
         JvmIrMangler, IrFactoryImpl, FirJvmVisibilityConverter,
         Fir2IrJvmSpecialAnnotationSymbolProvider(),
         irGeneratorExtensions,
-        builtIns = DefaultBuiltIns.Instance // TODO: consider passing externally
+        kotlinBuiltIns = DefaultBuiltIns.Instance // TODO: consider passing externally
     )
 }
