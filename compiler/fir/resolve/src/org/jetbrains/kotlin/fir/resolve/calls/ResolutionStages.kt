@@ -653,6 +653,10 @@ internal object LowerPriorityIfDynamic : ResolutionStage() {
     override suspend fun check(candidate: Candidate, callInfo: CallInfo, sink: CheckerSink, context: ResolutionContext) {
         if (candidate.symbol.origin is FirDeclarationOrigin.DynamicScope) {
             candidate.addDiagnostic(LowerPriorityForDynamic)
+            return
+        }
+        if (candidate.callInfo.isImplicitInvoke && candidate.callInfo.explicitReceiver?.typeRef?.coneTypeSafe<ConeDynamicType>() != null) {
+            candidate.addDiagnostic(LowerPriorityForDynamic)
         }
     }
 }
