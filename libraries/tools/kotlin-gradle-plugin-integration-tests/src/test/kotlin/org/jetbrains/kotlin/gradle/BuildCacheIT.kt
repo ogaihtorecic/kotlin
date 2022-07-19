@@ -72,6 +72,10 @@ class BuildCacheIT : KGPBaseTest() {
     }
 
     @DisplayName("Should correctly handle modification/restoration of source file")
+    @GradleTestVersions(
+        maxVersion = TestVersions.Gradle.G_7_5,
+        additionalVersions = [TestVersions.Gradle.G_7_2, TestVersions.Gradle.G_7_3, TestVersions.Gradle.G_7_4]
+    )
     @GradleTest
     fun testCacheHitAfterCacheHit(gradleVersion: GradleVersion) {
         project("simpleProject", gradleVersion) {
