@@ -1182,6 +1182,16 @@ internal class ValueClassCannotBeCloneableImpl(
     override val token: KtLifetimeToken,
 ) : KtFirDiagnostic.ValueClassCannotBeCloneable(), KtAbstractFirDiagnostic<KtDeclaration>
 
+internal class ValueObjectNotSealedInlineChildImpl(
+    override val firDiagnostic: KtPsiDiagnostic,
+    override val token: KtLifetimeToken,
+) : KtFirDiagnostic.ValueObjectNotSealedInlineChild(), KtAbstractFirDiagnostic<KtDeclaration>
+
+internal class SealedInlineChildNotValueImpl(
+    override val firDiagnostic: KtPsiDiagnostic,
+    override val token: KtLifetimeToken,
+) : KtFirDiagnostic.SealedInlineChildNotValue(), KtAbstractFirDiagnostic<KtDeclaration>
+
 internal class NoneApplicableImpl(
     override val candidates: List<KtSymbol>,
     override val firDiagnostic: KtPsiDiagnostic,
