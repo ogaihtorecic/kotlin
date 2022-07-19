@@ -226,6 +226,20 @@ class BuilderInferenceSession(
         this.lambda = lambda
     }
 
+    fun buildResultingSubstitutor(resultingSubstitution: MutableMap<TypeConstructor, UnwrappedType>) {
+        val subMap = (commonSystem.buildCurrentSubstitutor() as? NewTypeSubstitutorByConstructorMap)?.map
+        if (subMap != null) {
+            for ((k, v) in subMap) {
+                resultingSubstitution.putIfAbsent(k, v)
+            }
+        }
+        for (nestedSession in nestedInferenceSessions) {
+            if (nestedSession is BuilderInferenceSession) {
+                nestedSession.buildResultingSubstitutor(resultingSubstitution)
+            }
+        }
+    }
+
     override fun inferPostponedVariables(
         lambda: ResolvedLambdaAtom,
         constraintSystemBuilder: ConstraintSystemBuilder,
@@ -237,7 +251,9 @@ class BuilderInferenceSession(
         val initialStorage = constraintSystemBuilder.currentStorage()
         val resultingSubstitutor by lazy {
             val storageSubstitutor = initialStorage.buildResultingSubstitutor(commonSystem, transformTypeVariablesToErrorTypes = false)
-            ComposedSubstitutor(storageSubstitutor, commonSystem.buildCurrentSubstitutor() as NewTypeSubstitutor)
+            val sub = NewTypeSubstitutorByConstructorMap(mutableMapOf<TypeConstructor, UnwrappedType>().also { buildResultingSubstitutor(it) })
+            val aa = commonSystem.buildCurrentSubstitutor() as NewTypeSubstitutor
+            ComposedSubstitutor(storageSubstitutor, sub)
         }
 
         val effectivelyEmptyConstraintSystem = initializeCommonSystem(initialStorage)
@@ -406,7 +422,14 @@ class BuilderInferenceSession(
         val substitutedLowerType = nonFixedToVariablesSubstitutor.safeSubstitute(capTypesSubstitutor.substitute(lowerType.unwrap()))
         val substitutedUpperType = nonFixedToVariablesSubstitutor.safeSubstitute(capTypesSubstitutor.substitute(upperType.unwrap()))
 
-        return substitutedLowerType to substitutedUpperType
+        val typeVariables = stubsForPostponedVariables.keys.map { it.freshTypeConstructor }.toSet()
+        val s = mutableMapOf<TypeConstructor, UnwrappedType>().also { buildResultingSubstitutor(it) }.filterKeys {
+            it !in typeVariables
+        }
+
+        val ss = NewTypeSubstitutorByConstructorMap(s)
+
+        return ss.safeSubstitute(substitutedLowerType) to ss.safeSubstitute(substitutedUpperType)
     }
 
     private fun extractCommonCapturedTypes(a: KotlinType, b: KotlinType): List<NewCapturedType> {
@@ -430,11 +453,13 @@ class BuilderInferenceSession(
         for (parentSession in findAllParentBuildInferenceSessions()) {
             for ((variable, stubType) in parentSession.stubsForPostponedVariables) {
                 commonSystem.registerTypeVariableIfNotPresent(variable)
-                commonSystem.addSubtypeConstraint(
-                    variable.defaultType,
-                    stubType,
-                    InjectedAnotherStubTypeConstraintPositionImpl(lambdaArgument)
-                )
+                if (stubType.originalTypeVariable != variable.freshTypeConstructor) {
+                    commonSystem.addSubtypeConstraint(
+                        variable.defaultType,
+                        stubType,
+                        InjectedAnotherStubTypeConstraintPositionImpl(lambdaArgument)
+                    )
+                }
             }
         }
 

@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.resolve.calls.checkers.AdditionalTypeChecker
 import org.jetbrains.kotlin.resolve.calls.checkers.CallChecker
 import org.jetbrains.kotlin.resolve.calls.checkers.CallCheckerContext
 import org.jetbrains.kotlin.resolve.calls.components.AdditionalDiagnosticReporter
+import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
 import org.jetbrains.kotlin.resolve.calls.context.BasicCallResolutionContext
 import org.jetbrains.kotlin.resolve.calls.context.CallPosition
 import org.jetbrains.kotlin.resolve.calls.inference.buildResultingSubstitutor
@@ -158,7 +159,11 @@ class KotlinToResolvedCallTransformer(
         tracingStrategy: TracingStrategy,
     ) {
         if (baseResolvedCall is CompletedCallResolutionResult) {
-            context.inferenceSession.addCompletedCallInfo(PSICompletedCallInfo(baseResolvedCall, context, resolvedCall, tracingStrategy))
+            var currentSession: InferenceSession? = context.inferenceSession
+            while (currentSession != null) {
+                currentSession.addCompletedCallInfo(PSICompletedCallInfo(baseResolvedCall, context, resolvedCall, tracingStrategy))
+                currentSession = currentSession.parentSession
+            }
         }
     }
 

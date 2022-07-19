@@ -32,16 +32,11 @@ fun test() {
     val ret = build {
         emit("1")
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(getIn(), getIn())<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(getIn(), Test.foo(getIn()))<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(Test.foo(getIn()), Test.foo(getIn()))<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(Test.foo(getIn()), getIn())<!>
 
         build2 {
             emit(1)
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>intersect(<!TYPE_MISMATCH!>this@build.getIn()<!>, getIn())<!>
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(<!TYPE_MISMATCH!>getIn()<!>, Test.foo(this@build.getIn()))<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>intersect(<!TYPE_MISMATCH!>Test.foo(this@build.getIn())<!>, Test.foo(getIn()))<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String")!>intersect(<!TYPE_MISMATCH!>Test.foo(getIn())<!>, this@build.getIn())<!>
             ""
         }
         ""
