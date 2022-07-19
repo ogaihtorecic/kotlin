@@ -9,7 +9,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.openapi.vfs.CharsetToolkit
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
@@ -27,6 +26,7 @@ import org.jetbrains.kotlin.scripting.definitions.runReadAction
 import org.jetbrains.kotlin.scripting.withCorrectExtension
 import java.io.File
 import java.net.URL
+import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.dependencies.AsyncDependenciesResolver
@@ -98,7 +98,7 @@ class ScriptLightVirtualFile(name: String, private val _path: String?, text: Str
     ) {
 
     init {
-        charset = CharsetToolkit.UTF8_CHARSET
+        charset = StandardCharsets.UTF_8
     }
 
     override fun getPath(): String = _path ?: if (parent != null) parent.path + "/" + name else name
