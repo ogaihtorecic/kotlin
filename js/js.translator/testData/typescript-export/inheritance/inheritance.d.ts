@@ -13,7 +13,7 @@ declare namespace JS_TESTS {
         }
     }
     namespace foo {
-        const fifth: (foo.Third<boolean> & foo.IA)/* foo.Fifth<boolean> */;
+        const fifth: (foo.Third<boolean> & foo.IA & foo.IG<boolean>)/* foo.Fifth<boolean> */;
         abstract class AC implements foo.I2 {
             constructor();
             get x(): string;
@@ -102,16 +102,25 @@ declare namespace JS_TESTS {
             readonly __doNotUseOrImplementIt: foo.I3["__doNotUseOrImplementIt"];
         }
         interface IA {
+            readonly foo: any;
             readonly __doNotUseOrImplementIt: {
                 readonly "foo.IA": unique symbol;
+            };
+        }
+        interface IG<T> {
+            process(value: T): void;
+            readonly __doNotUseOrImplementIt: {
+                readonly "foo.IG": unique symbol;
             };
         }
         class Third<T> extends /* foo.Second */ foo.First {
             constructor();
         }
-        class Sixth extends /* foo.Fifth<number> */ foo.Third<number> implements foo.IA/*, foo.IC */ {
+        class Sixth extends /* foo.Fifth<number> */ foo.Third<number> implements foo.IA, foo.IG<number>/*, foo.IC */ {
             constructor();
-            readonly __doNotUseOrImplementIt: foo.IA["__doNotUseOrImplementIt"];
+            process(value: number): void;
+            get foo(): number;
+            readonly __doNotUseOrImplementIt: foo.IA["__doNotUseOrImplementIt"] & foo.IG<number>["__doNotUseOrImplementIt"];
         }
         class First {
             constructor();

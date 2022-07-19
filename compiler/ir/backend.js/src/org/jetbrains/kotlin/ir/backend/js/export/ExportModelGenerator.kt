@@ -65,14 +65,12 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     }
 
     private fun exportClass(candidate: IrClass): ExportedDeclaration? {
-        val (transitiveSuperTypes, additionalMemberDeclarations) = candidate.defaultType.collectSuperTransitiveHierarchy()
-
-        val superTypes = transitiveSuperTypes + candidate.superTypes
+        val superTypes = candidate.defaultType.collectSuperTransitiveHierarchy() + candidate.superTypes
 
         return if (candidate.isEnumClass) {
-            exportEnumClass(candidate, superTypes, additionalMemberDeclarations)
+            exportEnumClass(candidate, superTypes)
         } else {
-            exportOrdinaryClass(candidate, superTypes, additionalMemberDeclarations)
+            exportOrdinaryClass(candidate, superTypes)
         }
     }
 
@@ -209,11 +207,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         return Exportability.Allowed
     }
 
-    private fun exportOrdinaryClass(
-        klass: IrClass,
-        superTypes: Iterable<IrType>,
-        additionalMemberDeclarations: Set<IrDeclaration>
-    ): ExportedDeclaration? {
+    private fun exportOrdinaryClass(klass: IrClass, superTypes: Iterable<IrType>): ExportedDeclaration? {
         when (val exportability = classExportability(klass)) {
             is Exportability.Prohibited -> error(exportability.reason)
             is Exportability.NotNeeded -> return null
@@ -221,7 +215,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             }
         }
 
-        val (members, nestedClasses) = exportClassDeclarations(klass, superTypes, additionalMemberDeclarations)
+        val (members, nestedClasses) = exportClassDeclarations(klass, superTypes)
 
         return exportClass(
             klass,
@@ -231,7 +225,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
         )
     }
 
-    private fun exportEnumClass(klass: IrClass, superTypes: Iterable<IrType>, additionalMemberDeclarations: Set<IrDeclaration>): ExportedDeclaration? {
+    private fun exportEnumClass(klass: IrClass, superTypes: Iterable<IrType>): ExportedDeclaration? {
         when (val exportability = classExportability(klass)) {
             is Exportability.Prohibited -> error(exportability.reason)
             is Exportability.NotNeeded -> return null
@@ -248,7 +242,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
             enumEntries
                 .keysToMap(enumEntries::indexOf)
 
-        val (members, nestedClasses) = exportClassDeclarations(klass, superTypes, additionalMemberDeclarations) { candidate ->
+        val (members, nestedClasses) = exportClassDeclarations(klass, superTypes) { candidate ->
             val enumExportedMember = exportAsEnumMember(candidate, enumEntriesToOrdinal)
             enumExportedMember
         }
@@ -269,15 +263,14 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
     private fun exportClassDeclarations(
         klass: IrClass,
         superTypes: Iterable<IrType>,
-        additionalMemberDeclarations: Set<IrDeclaration>,
         specialProcessing: (IrDeclarationWithName) -> ExportedDeclaration? = { null }
     ): ExportedClassDeclarationsInfo {
         val members = mutableListOf<ExportedDeclaration>()
         val nestedClasses = mutableListOf<ExportedClass>()
 
-        for (declaration in klass.declarations + additionalMemberDeclarations) {
+        for (declaration in klass.declarations) {
             val candidate = getExportCandidate(declaration) ?: continue
-            if (!additionalMemberDeclarations.contains(declaration) && !shouldDeclarationBeExported(candidate, context)) continue
+            if (!shouldDeclarationBeExported(candidate, context)) continue
 
             val processingResult = specialProcessing(candidate)
             if (processingResult != null) {
@@ -554,7 +547,7 @@ class ExportModelGenerator(val context: JsIrBackendContext, val generateNamespac
                 val name = klass.getFqNameWithJsNameWhenAvailable(!isNonExportedExternal && generateNamespacesForPackages).asString()
 
                 val exportedSupertype = runIf(shouldCalculateExportedSupertypeForImplicit && isImplicitlyExported) {
-                    val (transitiveExportedType) = nonNullType.collectSuperTransitiveHierarchy()
+                    val transitiveExportedType = nonNullType.collectSuperTransitiveHierarchy()
                     if (transitiveExportedType.isEmpty()) return@runIf null
                     transitiveExportedType.map(::exportType).reduce(ExportedType::IntersectionType)
                 } ?: ExportedType.Primitive.Any
@@ -707,7 +700,11 @@ private fun shouldDeclarationBeExported(declaration: IrDeclarationWithName, cont
 }
 
 fun IrOverridableDeclaration<*>.isAllowedFakeOverriddenDeclaration(context: JsIrBackendContext): Boolean {
-    if (this.resolveFakeOverride(allowAbstract = true)?.parentClassOrNull.isExportedInterface(context)) {
+    val firstExportedRealOverride = runIf(isFakeOverride) {
+        resolveFakeOverrideOrNull(allowAbstract = true) { it === this || it.parentClassOrNull?.isExported(context) != true }
+    }
+
+    if (firstExportedRealOverride?.parentClassOrNull.isExportedInterface(context)) {
         return true
     }
 

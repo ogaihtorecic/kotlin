@@ -168,7 +168,7 @@ enum class EC : I3 {
 
 @JsExport
 interface IA {
-    fun foo(): String
+    val foo: Any
 }
 
 @JsExport
@@ -179,13 +179,19 @@ interface IG<T> {
 interface IB : IA
 
 interface IC : IB {
-    override fun foo(): String = "IB"
+    override val foo: Any
+}
+
+interface ID : IC {
+    override val foo: Int
 }
 
 @JsExport
 open class Third<T>: Second()
 
-open class Forth<A>: Third<A>(), IB, IC
+open class Forth<A>: Third<A>(), IB, ID {
+    override val foo: Int = 42
+}
 
 open class Fifth<B>: Forth<B>(), IG<B> {
     override fun process(value: B) {}
