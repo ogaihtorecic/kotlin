@@ -11,14 +11,20 @@ import kotlinx.cinterop.memScoped
 import llvm.*
 import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.RuntimeNames
+import org.jetbrains.kotlin.backend.konan.getUnboxFunction
 import org.jetbrains.kotlin.backend.konan.ir.llvmSymbolOrigin
+import org.jetbrains.kotlin.backend.konan.isUsedAsBoxClass
 import org.jetbrains.kotlin.descriptors.konan.CompiledKlibModuleOrigin
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.expressions.IrReturn
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isNothing
+import org.jetbrains.kotlin.ir.types.isNullable
 import org.jetbrains.kotlin.ir.util.hasAnnotation
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.isThrowable
+import org.jetbrains.kotlin.ir.util.statements
 
 /**
  * Add attributes to LLVM function declaration and its invocation.
@@ -188,6 +194,14 @@ private fun mustNotInline(context: Context, irFunction: IrFunction): Boolean {
     return false
 }
 
+private fun isUnboxFunction(context: Context, irFunction: IrFunction): Boolean =
+        irFunction.returnType.getClass()?.let {
+            it.isUsedAsBoxClass() && context.getUnboxFunction(it) == irFunction
+        } ?: false
+
+private fun isNonNullableUnboxFunction(context: Context, irFunction: IrFunction): Boolean =
+        !irFunction.returnType.isNullable() && isUnboxFunction(context, irFunction)
+
 private fun inferFunctionAttributes(contextUtils: ContextUtils, irFunction: IrFunction): List<LlvmFunctionAttribute> =
         mutableListOf<LlvmFunctionAttribute>().apply {
             // suspend function can return value in case of COROUTINE_SUSPENDED.
@@ -196,5 +210,8 @@ private fun inferFunctionAttributes(contextUtils: ContextUtils, irFunction: IrFu
             }
             if (mustNotInline(contextUtils.context, irFunction)) {
                 add(LlvmFunctionAttribute.NoInline)
+            }
+            if (isNonNullableUnboxFunction(contextUtils.context, irFunction)) {
+                add(LlvmFunctionAttribute.AlwaysInline)
             }
         }
