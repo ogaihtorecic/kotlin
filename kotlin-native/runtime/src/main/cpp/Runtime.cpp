@@ -28,6 +28,7 @@
 #include "Worker.h"
 #include "KString.h"
 #include "std_support/New.hpp"
+#include <atomic>
 
 #ifndef KONAN_NO_THREADS
 #include <thread>
@@ -502,6 +503,7 @@ void CallInitGlobalPossiblyLock(int volatile* state, void (*init)()) {
             throw;
         }
 #endif
+        std::atomic_thread_fence(std::memory_order_release);
         *state = FILE_INITIALIZED;
     } else {
         // Switch to the native state to avoid dead-locks.
