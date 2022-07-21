@@ -1039,6 +1039,7 @@ class CallAndReferenceGenerator(
                 val ownerFunction =
                     symbol.owner as? IrFunction
                         ?: (symbol.owner as? IrProperty)?.getter
+                if (ownerFunction?.isStatic ?: false) return this
                 if (ownerFunction?.dispatchReceiverParameter != null) {
                     val baseDispatchReceiver = qualifiedAccess.findIrDispatchReceiver(explicitReceiverExpression)
                     dispatchReceiver =
