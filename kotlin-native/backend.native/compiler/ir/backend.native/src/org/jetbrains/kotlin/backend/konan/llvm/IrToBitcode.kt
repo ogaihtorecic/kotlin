@@ -2422,14 +2422,13 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         moveBlockAfterEntry(bbExit)
         moveBlockAfterEntry(bbInit)
         val state = load(statePtr)
-        LLVMSetVolatile(state, 1)
+        LLVMSetOrdering(state, LLVMAtomicOrdering.LLVMAtomicOrderingAcquire)
         condBr(icmpEq(state, Int32(FILE_INITIALIZED).llvm), bbExit, bbInit)
         positionAtEnd(bbInit)
         call(context.llvm.callInitGlobalPossiblyLock, listOf(statePtr, initializerPtr),
                 exceptionHandler = currentCodeContext.exceptionHandler)
         br(bbExit)
         positionAtEnd(bbExit)
-        LLVMBuildFence(builder, LLVMAtomicOrdering.LLVMAtomicOrderingAcquire, 0, "")
         codegen.theUnitInstanceRef.llvm
     }
 
