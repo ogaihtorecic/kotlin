@@ -1,3 +1,4 @@
+// NO_CHECK_LAMBDA_INLINING
 // FILE: 1.kt
 inline fun <T> mrun(block: () -> T) = block()
 
